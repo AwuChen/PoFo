@@ -15,29 +15,45 @@
     const nodes = [];
     const links = [];
 
+    let nodeId = 0;
+    const layerNodeCounts = [];
+
+    // First, generate nodes and track layer-wise counts
     for (let layer = 0; layer < layers; layer++) {
       const count = Math.round(N / layers);
+      layerNodeCounts.push(count);
+
       for (let i = 0; i < count; i++) {
-        const id = nodes.length;
         const angle = (2 * Math.PI * i) / count;
         const radius = 100 + layer * 80;
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
         nodes.push({
-          id,
+          id: nodeId,
           fx: x,
           fy: y,
           size: Math.random() * 8 + 3,
           color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
         });
-        if (layer > 0) {
-          const prevLayerStart = nodes.length - count - count;
-          links.push({
-            source: id,
-            target: prevLayerStart + i % count
-          });
-        }
+        nodeId++;
       }
+    }
+
+    // Then generate links between adjacent layers
+    let prevStart = 0;
+    for (let l = 1; l < layers; l++) {
+      const currStart = layerNodeCounts.slice(0, l).reduce((a, b) => a + b, 0);
+      const currCount = layerNodeCounts[l];
+      const prevCount = layerNodeCounts[l - 1];
+
+      for (let i = 0; i < currCount; i++) {
+        links.push({
+          source: currStart + i,
+          target: prevStart + (i % prevCount)
+        });
+      }
+
+      prevStart = currStart;
     }
 
     const gData = { nodes, links };
@@ -54,7 +70,6 @@
       .linkColor(() => '#999')
       .linkCurvature(0)
       .enableNodeDrag(false)
-      .zoomPanInteraction(false)
       .onEngineTick(() => Graph.pauseAnimation());
   </script>
 </body>
