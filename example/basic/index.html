@@ -148,29 +148,34 @@
         break;
 
       case 3: // Full render
-        showGrid = true;
-        Graph.graphData({
-          nodes: nodes.map(n => ({
-            ...n,
-            fx: undefined,
-            fy: undefined,
-            color: getRandomColor(),
-            val: Math.random() * 10 + 1
-          })),
-          links
-        });
+  showGrid = true;
+  drawGrid();
 
-        Graph.nodeCanvasObject((node, ctx) => {
-          ctx.beginPath();
-          ctx.fillStyle = node.color || '#333';
-          const radius = node.val || 4;
-          ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
-          ctx.fill();
-        });
+  // Assign properties directly (but keep radial positions to avoid needing simulation)
+  const updatedNodes = nodes.map(n => ({
+    ...n,
+    fx: n.fx, // keep radial layout
+    fy: n.fy,
+    color: getRandomColor(),
+    val: Math.random() * 10 + 2
+  }));
 
-        Graph.enableNodeDrag(true);
-        drawGrid();
-        break;
+  Graph.graphData({
+    nodes: updatedNodes,
+    links
+  });
+
+  Graph.nodeCanvasObject((node, ctx) => {
+    ctx.beginPath();
+    ctx.fillStyle = node.color || '#333';
+    const radius = node.val || 4;
+    ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
+    ctx.fill();
+  });
+
+  Graph.enableNodeDrag(false); // disable dragging if you want to preserve structure
+  break;
+
     }
   }
 
