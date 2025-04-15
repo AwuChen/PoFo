@@ -1,75 +1,189 @@
-<head> 
-  <style> 
-    body { margin: 0; overflow: hidden; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Radial Graph States</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #f4f4f4; }
     canvas { display: block; }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    #controls button {
+      margin: 5px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
 </head>
-
 <body>
-  <div id="graph"></div>
 
-  <script>
-    const N = 150;
-    const layers = 5;
-    const nodes = [];
-    const links = [];
+<div id="controls">
+  <button onclick="setGraphState(1)">State 1</button>
+  <button onclick="setGraphState(2)">State 2</button>
+  <button onclick="setGraphState(3)">State 3</button>
+</div>
 
-    let nodeId = 0;
-    const layerNodeCounts = [];
+<canvas id="radial-graph"></canvas>
 
-    // First, generate nodes and track layer-wise counts
-    for (let layer = 0; layer < layers; layer++) {
-      const count = Math.round(N / layers);
-      layerNodeCounts.push(count);
+<script src="https://unpkg.com/force-graph"></script>
+<script>
+  const canvas = document.getElementById('radial-graph');
+  const context = canvas.getContext('2d');
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
 
-      for (let i = 0; i < count; i++) {
-        const angle = (2 * Math.PI * i) / count;
-        const radius = 100 + layer * 80;
-        const x = radius * Math.cos(angle);
-        const y = radius * Math.sin(angle);
-        nodes.push({
-          id: nodeId,
-          fx: x,
-          fy: y,
-          size: Math.random() * 8 + 3,
-          color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
-        });
-        nodeId++;
+  const Graph = ForceGraph()(canvas)
+    .nodeRelSize(4)
+    .linkWidth(1)
+    .nodeColor(node => node.color || '#333')
+    .backgroundColor('#f4f4f4')
+    .d3AlphaDecay(0.05)
+    .nodeCanvasObjectMode(() => 'after');
+
+  let showGrid = false;
+  let state = 1;
+
+  const numRadials = 36;
+  const numRings = 7;
+  const maxRadius = Math.min(width, height) / 2 - 50;
+  const centerX = width / 2;
+  const centerY = height / 2;
+
+  const polarToCartesian = (r, angle) => {
+    const rad = angle * (Math.PI / 180);
+    return {
+      x: centerX + r * Math.cos(rad),
+      y: centerY + r * Math.sin(rad)
+    };
+  };
+
+  // Build radial layout nodes
+  const nodes = [];
+  const links = [];
+
+  for (let i = 0; i < numRadials; i++) {
+    const angle = (360 / numRadials) * i;
+    for (let j = 1; j <= numRings; j++) {
+      const radius = (maxRadius / numRings) * j;
+      const pos = polarToCartesian(radius, angle);
+      const id = `${i}-${j}`;
+      nodes.push({ id, fx: pos.x, fy: pos.y });
+
+      if (j > 1) {
+        const parentId = `${i}-${j - 1}`;
+        links.push({ source: parentId, target: id });
       }
     }
+  }
 
-    // Then generate links between adjacent layers
-    let prevStart = 0;
-    for (let l = 1; l < layers; l++) {
-      const currStart = layerNodeCounts.slice(0, l).reduce((a, b) => a + b, 0);
-      const currCount = layerNodeCounts[l];
-      const prevCount = layerNodeCounts[l - 1];
+  Graph.width(width).height(height).graphData({ nodes, links });
 
-      for (let i = 0; i < currCount; i++) {
-        links.push({
-          source: currStart + i,
-          target: prevStart + (i % prevCount)
-        });
+  function drawGrid() {
+    context.clearRect(0, 0, width, height);
+
+    if (showGrid) {
+      context.save();
+      context.strokeStyle = '#999';
+      context.lineWidth = 0.5;
+      context.setLineDash([4, 4]);
+
+      // Draw concentric circles
+      for (let j = 1; j <= numRings; j++) {
+        const r = (maxRadius / numRings) * j;
+        context.beginPath();
+        context.arc(centerX, centerY, r, 0, 2 * Math.PI);
+        context.stroke();
       }
 
-      prevStart = currStart;
+      context.restore();
     }
 
-    const gData = { nodes, links };
+    // Always draw radial lines
+    context.save();
+    context.strokeStyle = '#999';
+    context.lineWidth = 0.5;
+    context.setLineDash([2, 2]);
 
-    const Graph = ForceGraph()(document.getElementById('graph'))
-      .graphData(gData)
-      .nodeCanvasObject((node, ctx) => {
-        ctx.beginPath();
-        ctx.fillStyle = node.color;
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
-        ctx.fill();
-      })
-      .linkWidth(1)
-      .linkColor(() => '#999')
-      .linkCurvature(0)
-      .enableNodeDrag(true)
-      .onEngineTick(() => Graph.pauseAnimation());
-  </script>
+    for (let i = 0; i < numRadials; i++) {
+      const angle = (360 / numRadials) * i;
+      const pos = polarToCartesian(maxRadius, angle);
+      context.beginPath();
+      context.moveTo(centerX, centerY);
+      context.lineTo(pos.x, pos.y);
+      context.stroke();
+    }
+
+    context.restore();
+  }
+
+  function getRandomColor() {
+    const palette = ['#6b705c', '#b7b7a4', '#cb997e', '#ddbea9', '#b5838d', '#a5a58d'];
+    return palette[Math.floor(Math.random() * palette.length)];
+  }
+
+  function setGraphState(newState) {
+    state = newState;
+    switch (state) {
+      case 1: // Only lines
+        showGrid = false;
+        Graph.nodeCanvasObject(() => {});
+        Graph.enableNodeDrag(false);
+        drawGrid();
+        break;
+
+      case 2: // Lines + grid
+        showGrid = true;
+        Graph.nodeCanvasObject(() => {});
+        Graph.enableNodeDrag(false);
+        drawGrid();
+        break;
+
+      case 3: // Full render
+        showGrid = true;
+        Graph.graphData({
+          nodes: nodes.map(n => ({
+            ...n,
+            fx: undefined,
+            fy: undefined,
+            color: getRandomColor(),
+            val: Math.random() * 10 + 1
+          })),
+          links
+        });
+
+        Graph.nodeCanvasObject((node, ctx) => {
+          ctx.beginPath();
+          ctx.fillStyle = node.color || '#333';
+          const radius = node.val || 4;
+          ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
+          ctx.fill();
+        });
+
+        Graph.enableNodeDrag(true);
+        drawGrid();
+        break;
+    }
+  }
+
+  setGraphState(1); // Initial state
+
+  window.addEventListener('resize', () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    Graph.width(width).height(height);
+    drawGrid();
+  });
+</script>
 </body>
+</html>
