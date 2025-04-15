@@ -147,23 +147,21 @@
         drawGrid();
         break;
 
-      case 3: // Full render
+      case 3: // Full render with grid, lines, and nodes
   showGrid = true;
   drawGrid();
 
-  // Assign properties directly (but keep radial positions to avoid needing simulation)
-  const updatedNodes = nodes.map(n => ({
-    ...n,
-    fx: n.fx, // keep radial layout
-    fy: n.fy,
-    color: getRandomColor(),
-    val: Math.random() * 10 + 2
-  }));
-
-  Graph.graphData({
-    nodes: updatedNodes,
-    links
+  // Lock positions from radial layout (used in State 2)
+  nodes.forEach((node, i) => {
+    const angle = (i / nodes.length) * 2 * Math.PI;
+    const radius = Math.random() * 200 + 100;
+    node.fx = radius * Math.cos(angle);
+    node.fy = radius * Math.sin(angle);
+    node.val = Math.random() * 10 + 2;
+    node.color = getRandomColor();
   });
+
+  Graph.graphData({ nodes: [...nodes], links });
 
   Graph.nodeCanvasObject((node, ctx) => {
     ctx.beginPath();
@@ -173,8 +171,9 @@
     ctx.fill();
   });
 
-  Graph.enableNodeDrag(false); // disable dragging if you want to preserve structure
+  Graph.enableNodeDrag(false);
   break;
+
 
     }
   }
