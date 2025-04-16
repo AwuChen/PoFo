@@ -93,8 +93,8 @@
     .graphData(gData)
     .enableNodeDrag(false)
     .onEngineTick(() => Graph.pauseAnimation())
-    .linkWidth(link => (link.radialIndex === activeRadial ? 2 : 1))
-    .linkColor(link => (link.radialIndex === activeRadial ? '#f00' : '#aaa'))
+    .linkWidth(link => currentState === 2 ? 0 : (link.radialIndex === activeRadial ? 2 : 1))
+    .linkColor(link => currentState === 2 ? 'transparent' : (link.radialIndex === activeRadial ? '#f00' : '#aaa'))
     .onNodeHover(node => {
       activeRadial = node ? node.radialIndex : null;
         Graph.graphData(gData); // redraw
@@ -113,7 +113,7 @@
         ctx.restore();
       }
 
-      if (currentState < 2) return;
+      if (currentState < 3) return;
 
       const isHighlighted = node.radialIndex === activeRadial;
       ctx.beginPath();
