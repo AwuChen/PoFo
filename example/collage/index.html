@@ -136,36 +136,26 @@
     <!-- Add more as needed -->
   </div>
 
-  
+
   <style>
     .collage {
       column-count: 6;
-      column-gap: 8px;
-      padding: 20px;
+      column-gap: 2px;
+      padding: 0; /* Remove any default padding */
+      margin: 8px; /* Use margin instead of padding for consistent outer spacing */
     }
 
     .collage img {
       width: 100%;
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 2px;
       break-inside: avoid;
       transition: opacity 0.3s ease;
     }
 
-    .faded {
-      opacity: 0.3;
-    }
-
-    @media (max-width: 1000px) {
-      .collage {
-        column-count: 3;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .collage {
-        column-count: 2;
-      }
+    /* Remove extra bottom space on last row images */
+    .collage img:last-child {
+      margin-bottom: 0;
     }
   </style>
 
