@@ -136,29 +136,6 @@
     <!-- Add more as needed -->
   </div>
 
-
-  <style>
-    .collage {
-      column-count: 6;
-      column-gap: 2px;
-      padding: 0; /* Remove any default padding */
-      margin: 2px; /* Use margin instead of padding for consistent outer spacing */
-    }
-
-    .collage img {
-      width: 100%;
-      display: block;
-      margin-bottom: 2px;
-      break-inside: avoid;
-      transition: opacity 0.3s ease;
-    }
-
-    /* Remove extra bottom space on last row images */
-    .collage img:last-child {
-      margin-bottom: 0;
-    }
-  </style>
-
   <script>
     function filterTheme(theme) {
       const images = document.querySelectorAll('.collage .photo');
