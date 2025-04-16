@@ -1,12 +1,26 @@
 <head> 
   <style> 
     body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
+    canvas { display: block; position: absolute; top: 0; left: 0; z-index: 0; }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 8px;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
 </head>
 
 <body>
+  <div id="controls">
+    <button onclick="setState(1)">State 1: Line Only</button>
+    <button onclick="setState(2)">State 2: + Grid</button>
+    <button onclick="setState(3)">State 3: + Nodes</button>
+  </div>
   <div id="graph"></div>
 
   <script>
@@ -18,7 +32,7 @@
     let nodeId = 0;
     const layerNodeCounts = [];
 
-    // First, generate nodes and track layer-wise counts
+    // Generate nodes in radial layout
     for (let layer = 0; layer < layers; layer++) {
       const count = Math.round(N / layers);
       layerNodeCounts.push(count);
@@ -32,7 +46,7 @@
           id: nodeId,
           fx: x,
           fy: y,
-          x: x, // explicitly set x/y to ensure position is used
+          x: x,
           y: y,
           size: Math.random() * 8 + 3,
           color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
@@ -41,7 +55,7 @@
       }
     }
 
-    // Then generate links between adjacent layers
+    // Create links between adjacent layers
     let prevStart = 0;
     for (let l = 1; l < layers; l++) {
       const currStart = layerNodeCounts.slice(0, l).reduce((a, b) => a + b, 0);
@@ -62,16 +76,70 @@
 
     const Graph = ForceGraph()(document.getElementById('graph'))
       .graphData(gData)
-      .nodeCanvasObject((node, ctx) => {
-        ctx.beginPath();
-        ctx.fillStyle = node.color;
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
-        ctx.fill();
-      })
       .linkWidth(1)
       .linkColor(() => '#999')
       .linkCurvature(0)
       .enableNodeDrag(true)
       .onEngineTick(() => Graph.pauseAnimation());
+
+    // Grid canvas overlay
+    const gridCanvas = document.createElement('canvas');
+    gridCanvas.width = window.innerWidth;
+    gridCanvas.height = window.innerHeight;
+    gridCanvas.style.zIndex = 1;
+    document.body.appendChild(gridCanvas);
+
+    const gridCtx = gridCanvas.getContext('2d');
+
+    function drawGrid(spacing = 50) {
+      gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+      gridCtx.strokeStyle = '#ccc';
+      gridCtx.lineWidth = 0.5;
+
+      for (let x = 0; x < gridCanvas.width; x += spacing) {
+        gridCtx.beginPath();
+        gridCtx.moveTo(x, 0);
+        gridCtx.lineTo(x, gridCanvas.height);
+        gridCtx.stroke();
+      }
+
+      for (let y = 0; y < gridCanvas.height; y += spacing) {
+        gridCtx.beginPath();
+        gridCtx.moveTo(0, y);
+        gridCtx.lineTo(gridCanvas.width, y);
+        gridCtx.stroke();
+      }
+    }
+
+    function clearGrid() {
+      gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+    }
+
+    // Switch states
+    function setState(state) {
+      if (state === 1) {
+        clearGrid();
+        Graph.nodeCanvasObject(() => {}); // Don't render nodes
+      } else if (state === 2) {
+        drawGrid();
+        Graph.nodeCanvasObject(() => {}); // Still hide nodes
+      } else if (state === 3) {
+        drawGrid();
+        Graph.nodeCanvasObject((node, ctx) => {
+          ctx.beginPath();
+          ctx.fillStyle = node.color;
+          ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
+          ctx.fill();
+        });
+      }
+    }
+
+    // Start in State 1
+    setState(1);
+
+    window.addEventListener('resize', () => {
+      gridCanvas.width = window.innerWidth;
+      gridCanvas.height = window.innerHeight;
+    });
   </script>
 </body>
