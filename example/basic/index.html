@@ -25,18 +25,24 @@
   <div id="graph"></div>
 
   <script>
-    const N = 150, layers = 5;
-    const nodes = [], links = [], layerNodeCounts = [];
-    const maxRadials = Math.max(...Array.from({ length: layers }, (_, i) => Math.round(N / layers)));
+    const radialCount = 30;
+    const maxLayers = 5;
+    const ringSpacing = 80;
+    const baseRadius = 100;
+
+    const nodes = [], links = [];
+    const radialMaxLayer = [];
 
     let nodeId = 0;
-    for (let layer = 0; layer < layers; layer++) {
-      const count = Math.round(N / layers);
-      layerNodeCounts.push(count);
 
-      for (let i = 0; i < count; i++) {
-        const angle = (2 * Math.PI * i) / count;
-        const radius = 100 + layer * 80;
+    // Assign random length per radial (how many layers it goes out)
+    for (let i = 0; i < radialCount; i++) {
+      const thisMaxLayer = Math.floor(Math.random() * (maxLayers + 3)); // can go beyond or stop short
+      radialMaxLayer.push(thisMaxLayer);
+
+      for (let l = 0; l < thisMaxLayer; l++) {
+        const angle = (2 * Math.PI * i) / radialCount;
+        const radius = baseRadius + l * ringSpacing;
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
 
@@ -44,29 +50,23 @@
           id: nodeId,
           fx: x,
           fy: y,
-          radialIndex: i,  // important
-          layer,
+          radialIndex: i,
+          layer: l,
           size: Math.random() * 6 + 2,
           color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
         });
 
+        // connect to previous layer if exists
+        if (l > 0) {
+          links.push({
+            source: nodeId - 1,
+            target: nodeId,
+            radialIndex: i
+          });
+        }
+
         nodeId++;
       }
-    }
-
-    // Create links between layers
-    let prevStart = 0;
-    for (let l = 1; l < layers; l++) {
-      const currStart = layerNodeCounts.slice(0, l).reduce((a, b) => a + b, 0);
-      const currCount = layerNodeCounts[l], prevCount = layerNodeCounts[l - 1];
-      for (let i = 0; i < currCount; i++) {
-        links.push({
-          source: currStart + i,
-          target: prevStart + (i % prevCount),
-          radialIndex: i % prevCount
-        });
-      }
-      prevStart = currStart;
     }
 
     const gData = { nodes, links };
@@ -81,17 +81,17 @@
       .linkColor(link => (link.radialIndex === activeRadial ? '#f00' : '#aaa'))
       .onNodeHover(node => {
         activeRadial = node ? node.radialIndex : null;
-        Graph.graphData(gData); // trigger redraw
+        Graph.graphData(gData); // redraw
       })
       .nodeCanvasObject((node, ctx, globalScale) => {
-        // Draw circular grid
+        // Draw grid rings once
         if (node.id === 0 && currentState >= 2) {
           ctx.save();
-          ctx.strokeStyle = '#ccc';
+          ctx.strokeStyle = '#ddd';
           ctx.lineWidth = 1 / globalScale;
-          for (let i = 0; i < layers; i++) {
+          for (let i = 0; i < maxLayers; i++) {
             ctx.beginPath();
-            ctx.arc(0, 0, 100 + i * 80, 0, 2 * Math.PI);
+            ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
             ctx.stroke();
           }
           ctx.restore();
