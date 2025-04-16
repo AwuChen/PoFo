@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Poetic Force - Cultural Branding Strategists</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PoFo – Cultural Branding Strategists</title>
   <style>
     body {
       margin: 0;
@@ -11,26 +11,47 @@
       background: #f9f9f9;
       color: #222;
     }
+
     .top-section {
       padding: 60px 40px 30px 40px;
-      text-align: left;
       background-color: white;
     }
+
     .top-section h1 {
       font-size: 36px;
-      font-weight: bold;
       margin-bottom: 10px;
     }
+
     .top-section h2 {
       font-size: 22px;
-      font-weight: normal;
       margin-bottom: 20px;
     }
+
     .top-section p {
       max-width: 800px;
       font-size: 16px;
       line-height: 1.6;
     }
+
+    .theme-selector {
+      margin: 20px 40px;
+    }
+
+    .theme-selector button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 14px;
+      border: none;
+      background: #222;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .theme-selector button.active {
+      background: #0077cc;
+    }
+
     .collage {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -38,10 +59,16 @@
       padding: 10px;
       background-color: #eee;
     }
+
     .collage img {
       width: 100%;
       height: auto;
       object-fit: cover;
+      transition: opacity 0.3s ease;
+    }
+
+    .faded {
+      opacity: 0.3;
     }
   </style>
 </head>
@@ -56,20 +83,49 @@
     </p>
   </div>
 
-  <div class="collage">
-    <!-- Replace these with actual image URLs or local image paths -->
-    <img src="https://via.placeholder.com/150" alt="img1">
-    <img src="https://via.placeholder.com/150" alt="img2">
-    <img src="https://via.placeholder.com/150" alt="img3">
-    <img src="https://via.placeholder.com/150" alt="img4">
-    <img src="https://via.placeholder.com/150" alt="img5">
-    <img src="https://via.placeholder.com/150" alt="img6">
-    <img src="https://via.placeholder.com/150" alt="img7">
-    <img src="https://via.placeholder.com/150" alt="img8">
-    <img src="https://via.placeholder.com/150" alt="img9">
-    <img src="https://via.placeholder.com/150" alt="img10">
-    <!-- Add as many as you want -->
+  <div class="theme-selector">
+    <button onclick="filterTheme('all')" class="active">All</button>
+    <button onclick="filterTheme('emotion')">By Emotion</button>
+    <button onclick="filterTheme('experience')">By Experience</button>
+    <button onclick="filterTheme('design')">By Design</button>
+    <button onclick="filterTheme('change')">By Change / Renewal</button>
   </div>
+
+  <div class="collage" id="collage">
+    <!-- Sample photos with theme tags -->
+    <img src="https://via.placeholder.com/150?text=1" class="photo" data-theme="emotion" />
+    <img src="https://via.placeholder.com/150?text=2" class="photo" data-theme="design" />
+    <img src="https://via.placeholder.com/150?text=3" class="photo" data-theme="experience" />
+    <img src="https://via.placeholder.com/150?text=4" class="photo" data-theme="emotion" />
+    <img src="https://via.placeholder.com/150?text=5" class="photo" data-theme="change" />
+    <img src="https://via.placeholder.com/150?text=6" class="photo" data-theme="design" />
+    <img src="https://via.placeholder.com/150?text=7" class="photo" data-theme="experience" />
+    <img src="https://via.placeholder.com/150?text=8" class="photo" data-theme="emotion" />
+    <!-- Add more as needed -->
+  </div>
+
+  <script>
+    function filterTheme(theme) {
+      const images = document.querySelectorAll('.collage .photo');
+      const buttons = document.querySelectorAll('.theme-selector button');
+
+      // Update button styles
+      buttons.forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.theme-selector button[onclick="filterTheme('${theme}')"]`).classList.add('active');
+
+      images.forEach(img => {
+        if (theme === 'all') {
+          img.classList.remove('faded');
+        } else {
+          if (img.dataset.theme === theme) {
+            img.classList.remove('faded');
+          } else {
+            img.classList.add('faded');
+          }
+        }
+      });
+    }
+  </script>
 
 </body>
 </html>
