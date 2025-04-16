@@ -27,95 +27,93 @@
   <script>
     const N = 150, layers = 5;
     const nodes = [], links = [], layerNodeCounts = [];
+    const maxRadials = Math.max(...Array.from({ length: layers }, (_, i) => Math.round(N / layers)));
 
     let nodeId = 0;
     for (let layer = 0; layer < layers; layer++) {
       const count = Math.round(N / layers);
       layerNodeCounts.push(count);
+
       for (let i = 0; i < count; i++) {
         const angle = (2 * Math.PI * i) / count;
         const radius = 100 + layer * 80;
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
+
         nodes.push({
-          id: nodeId++,
+          id: nodeId,
           fx: x,
           fy: y,
+          radialIndex: i,  // important
+          layer,
           size: Math.random() * 6 + 2,
           color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
         });
+
+        nodeId++;
       }
     }
 
+    // Create links between layers
     let prevStart = 0;
     for (let l = 1; l < layers; l++) {
       const currStart = layerNodeCounts.slice(0, l).reduce((a, b) => a + b, 0);
       const currCount = layerNodeCounts[l], prevCount = layerNodeCounts[l - 1];
       for (let i = 0; i < currCount; i++) {
-        links.push({ source: currStart + i, target: prevStart + (i % prevCount) });
+        links.push({
+          source: currStart + i,
+          target: prevStart + (i % prevCount),
+          radialIndex: i % prevCount
+        });
       }
       prevStart = currStart;
     }
 
     const gData = { nodes, links };
-
-    let highlightNode = null;
-    let highlightLink = null;
     let currentState = 3;
+    let activeRadial = null;
 
     const Graph = ForceGraph()(document.getElementById('graph'))
       .graphData(gData)
       .enableNodeDrag(false)
-      .nodeRelSize(0)
       .onEngineTick(() => Graph.pauseAnimation())
-      .linkWidth(l =>
-        l === highlightLink || l.source === highlightNode || l.target === highlightNode ? 2 : 1
-      )
-      .linkColor(l =>
-        l === highlightLink || l.source === highlightNode || l.target === highlightNode ? '#f00' : '#999'
-      )
+      .linkWidth(link => (link.radialIndex === activeRadial ? 2 : 1))
+      .linkColor(link => (link.radialIndex === activeRadial ? '#f00' : '#aaa'))
       .onNodeHover(node => {
-        highlightNode = node;
-        highlightLink = null;
-        Graph.graphData(gData); // trigger redraw
-      })
-      .onLinkHover(link => {
-        highlightLink = link;
-        highlightNode = null;
+        activeRadial = node ? node.radialIndex : null;
         Graph.graphData(gData); // trigger redraw
       })
       .nodeCanvasObject((node, ctx, globalScale) => {
+        // Draw circular grid
         if (node.id === 0 && currentState >= 2) {
-          const spacing = 80;
           ctx.save();
           ctx.strokeStyle = '#ccc';
           ctx.lineWidth = 1 / globalScale;
           for (let i = 0; i < layers; i++) {
             ctx.beginPath();
-            ctx.arc(0, 0, 100 + i * spacing, 0, 2 * Math.PI);
+            ctx.arc(0, 0, 100 + i * 80, 0, 2 * Math.PI);
             ctx.stroke();
           }
           ctx.restore();
         }
 
-        if (currentState < 3) return; // hide nodes in states 1 & 2
+        if (currentState < 3) return;
 
-        const isHighlighted = node === highlightNode;
+        const isHighlighted = node.radialIndex === activeRadial;
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
         ctx.fillStyle = node.color;
-        ctx.globalAlpha = isHighlighted ? 1 : 0.2;
+        ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
         ctx.fill();
         ctx.globalAlpha = 1;
       });
 
     function setState(state) {
       currentState = state;
-      highlightNode = null;
-      highlightLink = null;
-      Graph.graphData(gData); // reassign to force redraw
+      activeRadial = null;
+      Graph.graphData(gData);
     }
 
-    setState(3); // initial state
+    setState(3);
   </script>
 </body>
