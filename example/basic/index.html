@@ -24,13 +24,10 @@
   <div id="graph"></div>
 
   <script>
-    const N = 150;
-    const layers = 5;
-    const nodes = [];
-    const links = [];
-    let nodeId = 0;
-    const layerNodeCounts = [];
+    const N = 150, layers = 5;
+    const nodes = [], links = [], layerNodeCounts = [];
 
+    let nodeId = 0;
     for (let layer = 0; layer < layers; layer++) {
       const count = Math.round(N / layers);
       layerNodeCounts.push(count);
@@ -40,26 +37,21 @@
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
         nodes.push({
-          id: nodeId,
+          id: nodeId++,
           fx: x,
           fy: y,
           size: Math.random() * 6 + 2,
           color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
         });
-        nodeId++;
       }
     }
 
     let prevStart = 0;
     for (let l = 1; l < layers; l++) {
       const currStart = layerNodeCounts.slice(0, l).reduce((a, b) => a + b, 0);
-      const currCount = layerNodeCounts[l];
-      const prevCount = layerNodeCounts[l - 1];
+      const currCount = layerNodeCounts[l], prevCount = layerNodeCounts[l - 1];
       for (let i = 0; i < currCount; i++) {
-        links.push({
-          source: currStart + i,
-          target: prevStart + (i % prevCount)
-        });
+        links.push({ source: currStart + i, target: prevStart + (i % prevCount) });
       }
       prevStart = currStart;
     }
@@ -68,27 +60,32 @@
 
     let highlightNode = null;
     let highlightLink = null;
-    let showGrid = true;
-    let showNodes = true;
+    let currentState = 3;
 
     const Graph = ForceGraph()(document.getElementById('graph'))
       .graphData(gData)
-      .nodeRelSize(0)
       .enableNodeDrag(false)
+      .nodeRelSize(0)
       .onEngineTick(() => Graph.pauseAnimation())
-      .linkWidth(link =>
-        link === highlightLink ||
-        link.source === highlightNode ||
-        link.target === highlightNode ? 2 : 1
+      .linkWidth(l =>
+        l === highlightLink || l.source === highlightNode || l.target === highlightNode ? 2 : 1
       )
-      .linkColor(link =>
-        link === highlightLink ||
-        link.source === highlightNode ||
-        link.target === highlightNode ? '#f00' : '#999'
+      .linkColor(l =>
+        l === highlightLink || l.source === highlightNode || l.target === highlightNode ? '#f00' : '#999'
       )
+      .onNodeHover(node => {
+        highlightNode = node;
+        highlightLink = null;
+        Graph.refresh(); // force redraw
+      })
+      .onLinkHover(link => {
+        highlightLink = link;
+        highlightNode = null;
+        Graph.refresh(); // force redraw
+      })
       .nodeCanvasObject((node, ctx, globalScale) => {
-        // Draw circular grid behind everything
-        if (node.id === 0 && showGrid) {
+        // Draw circular grid once per frame (using first node)
+        if (node.id === 0 && currentState >= 2) {
           const spacing = 80;
           ctx.save();
           ctx.beginPath();
@@ -102,38 +99,24 @@
           ctx.restore();
         }
 
-        if (!showNodes) return;
+        if (currentState < 3) return; // skip node drawing in states 1 & 2
 
         const isHighlighted = node === highlightNode;
         ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
+        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
         ctx.fillStyle = node.color;
         ctx.globalAlpha = isHighlighted ? 1 : 0.2;
         ctx.fill();
         ctx.globalAlpha = 1;
-      })
-      .onNodeHover(node => {
-        highlightNode = node;
-        highlightLink = null;
-      })
-      .onLinkHover(link => {
-        highlightLink = link;
-        highlightNode = null;
       });
 
     function setState(state) {
-      if (state === 1) {
-        showGrid = false;
-        showNodes = false;
-      } else if (state === 2) {
-        showGrid = true;
-        showNodes = false;
-      } else if (state === 3) {
-        showGrid = true;
-        showNodes = true;
-      }
+      currentState = state;
+      highlightNode = null;
+      highlightLink = null;
+      Graph.refresh(); // trigger redraw
     }
 
-    setState(3);
+    setState(3); // initial state
   </script>
 </body>
