@@ -17,7 +17,7 @@
 
 <body>
   <div id="controls">
-    <button onclick="setState(1)">State 1: Line Only</button>
+    <button onclick="setState(1)">State 1: Lines Only</button>
     <button onclick="setState(2)">State 2: + Grid</button>
     <button onclick="setState(3)">State 3: + Nodes</button>
   </div>
@@ -28,11 +28,10 @@
     const layers = 5;
     const nodes = [];
     const links = [];
-
     let nodeId = 0;
     const layerNodeCounts = [];
 
-    // Generate nodes in radial layout
+    // Generate radial layout nodes
     for (let layer = 0; layer < layers; layer++) {
       const count = Math.round(N / layers);
       layerNodeCounts.push(count);
@@ -48,14 +47,14 @@
           fy: y,
           x: x,
           y: y,
-          size: Math.random() * 8 + 3,
+          size: Math.random() * 6 + 2,
           color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
         });
         nodeId++;
       }
     }
 
-    // Create links between adjacent layers
+    // Generate links between layers
     let prevStart = 0;
     for (let l = 1; l < layers; l++) {
       const currStart = layerNodeCounts.slice(0, l).reduce((a, b) => a + b, 0);
@@ -74,72 +73,86 @@
 
     const gData = { nodes, links };
 
-    const Graph = ForceGraph()(document.getElementById('graph'))
-      .graphData(gData)
-      .linkWidth(1)
-      .linkColor(() => '#999')
-      .linkCurvature(0)
-      .enableNodeDrag(true)
-      .onEngineTick(() => Graph.pauseAnimation());
-
-    // Grid canvas overlay
+    // Grid canvas (beneath graph)
     const gridCanvas = document.createElement('canvas');
-    gridCanvas.width = window.innerWidth;
-    gridCanvas.height = window.innerHeight;
-    gridCanvas.style.zIndex = 1;
     document.body.appendChild(gridCanvas);
-
     const gridCtx = gridCanvas.getContext('2d');
 
-    function drawGrid(spacing = 50) {
+    function resizeCanvas() {
+      gridCanvas.width = window.innerWidth;
+      gridCanvas.height = window.innerHeight;
+      drawCircularGrid();
+    }
+
+    function drawCircularGrid() {
       gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-      gridCtx.strokeStyle = '#ccc';
-      gridCtx.lineWidth = 0.5;
+      const centerX = gridCanvas.width / 2;
+      const centerY = gridCanvas.height / 2;
+      const spacing = 80;
 
-      for (let x = 0; x < gridCanvas.width; x += spacing) {
-        gridCtx.beginPath();
-        gridCtx.moveTo(x, 0);
-        gridCtx.lineTo(x, gridCanvas.height);
-        gridCtx.stroke();
-      }
+      gridCtx.strokeStyle = '#ddd';
+      gridCtx.lineWidth = 1;
 
-      for (let y = 0; y < gridCanvas.height; y += spacing) {
+      for (let i = 1; i <= layers; i++) {
         gridCtx.beginPath();
-        gridCtx.moveTo(0, y);
-        gridCtx.lineTo(gridCanvas.width, y);
+        gridCtx.arc(centerX, centerY, 100 + spacing * (i - 1), 0, 2 * Math.PI);
         gridCtx.stroke();
       }
     }
 
-    function clearGrid() {
-      gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    // Switch states
+    let highlightNode = null;
+    let highlightLink = null;
+
+    const Graph = ForceGraph()(document.getElementById('graph'))
+      .graphData(gData)
+      .enableNodeDrag(true)
+      .linkWidth(link => link === highlightLink || link.source === highlightNode || link.target === highlightNode ? 2 : 1)
+      .linkColor(link => link === highlightLink || link.source === highlightNode || link.target === highlightNode ? '#f00' : '#999')
+      .nodeCanvasObject((node, ctx, globalScale) => {
+        const isHighlighted = node === highlightNode;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
+        ctx.fillStyle = node.color;
+        ctx.globalAlpha = isHighlighted ? 1 : 0.2;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      })
+      .onNodeHover(node => {
+        highlightNode = node;
+        highlightLink = null;
+        Graph.refresh();
+      })
+      .onLinkHover(link => {
+        highlightLink = link;
+        highlightNode = null;
+        Graph.refresh();
+      })
+      .onEngineTick(() => Graph.pauseAnimation());
+
     function setState(state) {
       if (state === 1) {
-        clearGrid();
-        Graph.nodeCanvasObject(() => {}); // Don't render nodes
+        gridCanvas.style.display = 'none';
+        Graph.nodeCanvasObject(() => {}); // Hide nodes
       } else if (state === 2) {
-        drawGrid();
+        gridCanvas.style.display = 'block';
         Graph.nodeCanvasObject(() => {}); // Still hide nodes
       } else if (state === 3) {
-        drawGrid();
-        Graph.nodeCanvasObject((node, ctx) => {
+        gridCanvas.style.display = 'block';
+        Graph.nodeCanvasObject((node, ctx, globalScale) => {
+          const isHighlighted = node === highlightNode;
           ctx.beginPath();
-          ctx.fillStyle = node.color;
           ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
+          ctx.fillStyle = node.color;
+          ctx.globalAlpha = isHighlighted ? 1 : 0.2;
           ctx.fill();
+          ctx.globalAlpha = 1;
         });
       }
     }
 
-    // Start in State 1
-    setState(1);
-
-    window.addEventListener('resize', () => {
-      gridCanvas.width = window.innerWidth;
-      gridCanvas.height = window.innerHeight;
-    });
+    setState(3); // Default to State 3
   </script>
 </body>
