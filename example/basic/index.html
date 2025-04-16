@@ -59,7 +59,7 @@
         // connect to previous layer if exists
         if (l > 0) {
           links.push({
-            source: nodeId - 1,
+            source: 0,
             target: nodeId,
             radialIndex: i
           });
@@ -91,7 +91,7 @@
           ctx.lineWidth = 1 / globalScale;
           for (let i = 0; i < maxLayers; i++) {
             ctx.beginPath();
-            ctx.arc(0, 0, 0, 0, 2 * Math.PI);
+            ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
             ctx.stroke();
           }
           ctx.restore();
