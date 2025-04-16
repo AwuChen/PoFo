@@ -36,93 +36,93 @@
     let nodeId = 0;
 
     // Add central node at the origin
-const centerNodeId = nodeId++;
-nodes.push({
-  id: centerNodeId,
-  fx: 0,
-  fy: 0,
-  size: 4,
-  color: '#000000',
-});
-
-    // Adjusting to make lines converge at the center
-for (let i = 0; i < radialCount; i++) {
-  const thisMaxLayer = Math.floor(Math.random() * (maxLayers + 3));
-  radialMaxLayer.push(thisMaxLayer);
-
-  for (let l = 0; l < thisMaxLayer; l++) {
-    const angle = (2 * Math.PI * i) / radialCount;
-    const radius = baseRadius + l * ringSpacing;
-
-    const x = radius * Math.cos(angle);
-    const y = radius * Math.sin(angle);
-
+    const centerNodeId = nodeId++;
     nodes.push({
-      id: nodeId,
-      fx: x,
-      fy: y,
-      radialIndex: i,
-      layer: l,
-      size: Math.random() * 6 + 2,
-      color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
+      id: centerNodeId,
+      fx: 0,
+      fy: 0,
+      size: 4,
+      color: '#000000',
     });
 
-    if (l === 0) {
-      links.push({
-        source: centerNodeId,
-        target: nodeId,
-        radialIndex: i
-      });
-    } else {
-      links.push({
-        source: nodeId - 1,
-        target: nodeId,
-        radialIndex: i
-      });
-    }
+    // Adjusting to make lines converge at the center
+    for (let i = 0; i < radialCount; i++) {
+      const thisMaxLayer = Math.floor(Math.random() * (maxLayers + 3));
+      radialMaxLayer.push(thisMaxLayer);
 
-    nodeId++;
-  }
-}
+      for (let l = 0; l < thisMaxLayer; l++) {
+        const angle = (2 * Math.PI * i) / radialCount;
+        const radius = baseRadius + l * ringSpacing;
+
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
+
+        nodes.push({
+          id: nodeId,
+          fx: x,
+          fy: y,
+          radialIndex: i,
+          layer: l,
+          size: Math.random() * 6 + 2,
+          color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
+        });
+
+        if (l === 0) {
+          links.push({
+            source: centerNodeId,
+            target: nodeId,
+            radialIndex: i
+          });
+        } else {
+          links.push({
+            source: nodeId - 1,
+            target: nodeId,
+            radialIndex: i
+          });
+        }
+
+        nodeId++;
+      }
+    }
 
     const gData = { nodes, links };
     let currentState = 3;
     let activeRadial = null;
 
     const Graph = ForceGraph()(document.getElementById('graph'))
-      .graphData(gData)
-      .enableNodeDrag(false)
-      .onEngineTick(() => Graph.pauseAnimation())
-      .linkWidth(link => (link.radialIndex === activeRadial ? 2 : 1))
-      .linkColor(link => (link.radialIndex === activeRadial ? '#f00' : '#aaa'))
-      .onNodeHover(node => {
-        activeRadial = node ? node.radialIndex : null;
+    .graphData(gData)
+    .enableNodeDrag(false)
+    .onEngineTick(() => Graph.pauseAnimation())
+    .linkWidth(link => (link.radialIndex === activeRadial ? 2 : 1))
+    .linkColor(link => (link.radialIndex === activeRadial ? '#f00' : '#aaa'))
+    .onNodeHover(node => {
+      activeRadial = node ? node.radialIndex : null;
         Graph.graphData(gData); // redraw
       })
-      .nodeCanvasObject((node, ctx, globalScale) => {
+    .nodeCanvasObject((node, ctx, globalScale) => {
         // Draw grid rings once
-        if (node.id === 0 && currentState >= 2) {
-          ctx.save();
-          ctx.strokeStyle = '#ddd';
-          ctx.lineWidth = 1 / globalScale;
-          for (let i = 0; i < maxLayers; i++) {
-            ctx.beginPath();
-            ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
-            ctx.stroke();
-          }
-          ctx.restore();
+      if (node.id === 0 && currentState >= 2) {
+        ctx.save();
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1 / globalScale;
+        for (let i = 0; i < maxLayers; i++) {
+          ctx.beginPath();
+          ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+          ctx.stroke();
         }
+        ctx.restore();
+      }
 
-        if (currentState < 3) return;
+      if (currentState < 3) return;
 
-        const isHighlighted = node.radialIndex === activeRadial;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
-        ctx.fillStyle = node.color;
-        ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      });
+      const isHighlighted = node.radialIndex === activeRadial;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
+      ctx.fillStyle = node.color;
+      ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
 
     function setState(state) {
       currentState = state;
@@ -130,6 +130,6 @@ for (let i = 0; i < radialCount; i++) {
       Graph.graphData(gData);
     }
 
-    setState(3);
+    setState(1);
   </script>
 </body>
