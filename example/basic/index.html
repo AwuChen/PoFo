@@ -68,6 +68,8 @@
 
     let highlightNode = null;
     let highlightLink = null;
+    let showGrid = true;
+    let showNodes = true;
 
     const Graph = ForceGraph()(document.getElementById('graph'))
       .graphData(gData)
@@ -85,6 +87,23 @@
         link.target === highlightNode ? '#f00' : '#999'
       )
       .nodeCanvasObject((node, ctx, globalScale) => {
+        // Draw circular grid behind everything
+        if (node.id === 0 && showGrid) {
+          const spacing = 80;
+          ctx.save();
+          ctx.beginPath();
+          ctx.strokeStyle = '#ccc';
+          ctx.lineWidth = 1 / globalScale;
+          for (let i = 0; i < layers; i++) {
+            ctx.beginPath();
+            ctx.arc(0, 0, 100 + i * spacing, 0, 2 * Math.PI);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        if (!showNodes) return;
+
         const isHighlighted = node === highlightNode;
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
@@ -96,88 +115,25 @@
       .onNodeHover(node => {
         highlightNode = node;
         highlightLink = null;
-        Graph.refresh();
       })
       .onLinkHover(link => {
         highlightLink = link;
         highlightNode = null;
-        Graph.refresh();
       });
-
-    // Add circular grid drawing
-    Graph.backgroundCanvas((ctx, width, height) => {
-      const { x: cx, y: cy, k: scale } = Graph.cameraPosition();
-      ctx.save();
-      ctx.translate(width / 2, height / 2);
-      ctx.scale(scale, scale);
-      ctx.translate(-cx, -cy);
-
-      const ringCount = layers;
-      const spacing = 80;
-
-      ctx.strokeStyle = '#ccc';
-      ctx.lineWidth = 1 / scale;
-
-      for (let i = 0; i < ringCount; i++) {
-        ctx.beginPath();
-        ctx.arc(0, 0, 100 + i * spacing, 0, 2 * Math.PI);
-        ctx.stroke();
-      }
-      ctx.restore();
-    });
 
     function setState(state) {
       if (state === 1) {
-        Graph.nodeCanvasObject(() => {});
-        Graph.backgroundCanvas(() => {});
+        showGrid = false;
+        showNodes = false;
       } else if (state === 2) {
-        Graph.nodeCanvasObject(() => {});
-        Graph.backgroundCanvas((ctx, width, height) => {
-          const { x: cx, y: cy, k: scale } = Graph.cameraPosition();
-          ctx.save();
-          ctx.translate(width / 2, height / 2);
-          ctx.scale(scale, scale);
-          ctx.translate(-cx, -cy);
-          const spacing = 80;
-          ctx.strokeStyle = '#ccc';
-          ctx.lineWidth = 1 / scale;
-          for (let i = 0; i < layers; i++) {
-            ctx.beginPath();
-            ctx.arc(0, 0, 100 + i * spacing, 0, 2 * Math.PI);
-            ctx.stroke();
-          }
-          ctx.restore();
-        });
+        showGrid = true;
+        showNodes = false;
       } else if (state === 3) {
-        Graph.nodeCanvasObject((node, ctx, globalScale) => {
-          const isHighlighted = node === highlightNode;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
-          ctx.fillStyle = node.color;
-          ctx.globalAlpha = isHighlighted ? 1 : 0.2;
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        });
-        Graph.backgroundCanvas((ctx, width, height) => {
-          const { x: cx, y: cy, k: scale } = Graph.cameraPosition();
-          ctx.save();
-          ctx.translate(width / 2, height / 2);
-          ctx.scale(scale, scale);
-          ctx.translate(-cx, -cy);
-          const spacing = 80;
-          ctx.strokeStyle = '#ccc';
-          ctx.lineWidth = 1 / scale;
-          for (let i = 0; i < layers; i++) {
-            ctx.beginPath();
-            ctx.arc(0, 0, 100 + i * spacing, 0, 2 * Math.PI);
-            ctx.stroke();
-          }
-          ctx.restore();
-        });
+        showGrid = true;
+        showNodes = true;
       }
-      Graph.refresh();
     }
 
-    setState(3); // Start on state 3
+    setState(3);
   </script>
 </body>
