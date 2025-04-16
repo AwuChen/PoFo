@@ -76,19 +76,18 @@
       .onNodeHover(node => {
         highlightNode = node;
         highlightLink = null;
-        Graph.refresh(); // force redraw
+        Graph.emit('refresh'); // Correct way to redraw
       })
       .onLinkHover(link => {
         highlightLink = link;
         highlightNode = null;
-        Graph.refresh(); // force redraw
+        Graph.emit('refresh'); // Correct way to redraw
       })
       .nodeCanvasObject((node, ctx, globalScale) => {
         // Draw circular grid once per frame (using first node)
         if (node.id === 0 && currentState >= 2) {
           const spacing = 80;
           ctx.save();
-          ctx.beginPath();
           ctx.strokeStyle = '#ccc';
           ctx.lineWidth = 1 / globalScale;
           for (let i = 0; i < layers; i++) {
@@ -114,9 +113,9 @@
       currentState = state;
       highlightNode = null;
       highlightLink = null;
-      Graph.refresh(); // trigger redraw
+      Graph.emit('refresh'); // Use emit instead of refresh()
     }
 
-    setState(3); // initial state
+    setState(3); // default
   </script>
 </body>
