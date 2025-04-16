@@ -113,7 +113,7 @@
         ctx.restore();
       }
 
-      return;
+      if (node.id === 0) return
 
       const isHighlighted = node.radialIndex === activeRadial;
       ctx.beginPath();
