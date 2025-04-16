@@ -101,7 +101,7 @@
 
         const isHighlighted = node.radialIndex === activeRadial;
         ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
+        ctx.arc(0, 0, node.size, 0, 2 * Math.PI);
         ctx.fillStyle = node.color;
         ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
         ctx.fill();
