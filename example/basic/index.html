@@ -19,7 +19,7 @@
 <body>
   <div id="controls">
     <button onclick="setState(1)">State 1: Lines Only</button>
-    <button onclick="setState(2)">State 2: + Grid</button>
+    <button onclick="setState(2)">State 2: Grid Only</button>
     <button onclick="setState(3)">State 3: + Nodes</button>
   </div>
   <div id="graph"></div>
@@ -113,7 +113,7 @@
         ctx.restore();
       }
 
-      if (currentState < 3) return;
+      if (currentState < 2) return;
 
       const isHighlighted = node.radialIndex === activeRadial;
       ctx.beginPath();
