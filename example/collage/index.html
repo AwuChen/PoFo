@@ -53,17 +53,17 @@
     }
 
     .collage {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      grid-gap: 4px;
-      padding: 10px;
-      background-color: #eee;
+      column-count: 15; /* You can adjust this for different screen sizes */
+      column-gap: var(--gap);
+      padding: var(--gap);
     }
 
     .collage img {
       width: 100%;
-      height: auto;
-      object-fit: cover;
+      display: block;
+      margin-bottom: var(--gap);
+      border-radius: 4px;
+      break-inside: avoid; /* Prevents image breaking in column */
       transition: opacity 0.3s ease;
     }
 
@@ -78,20 +78,6 @@
     body {
       margin: 0;
       padding: 0;
-    }
-
-    .masonry {
-      column-count: 4; /* You can adjust this for different screen sizes */
-      column-gap: var(--gap);
-      padding: var(--gap);
-    }
-
-    .masonry img {
-      width: 100%;
-      display: block;
-      margin-bottom: var(--gap);
-      border-radius: 4px;
-      break-inside: avoid; /* Prevents image breaking in column */
     }
   </style>
 </head>
@@ -114,7 +100,7 @@
     <button onclick="filterTheme('change')">By Change / Renewal</button>
   </div>
 
-  <div class="masonry" id="collage">
+  <div class="collage" id="collage">
     <!-- Sample photos with theme tags -->
     <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184727-O47THN4VEAP4S1WAEAML/image+%2819%29.png" class="photo" data-theme="emotion" />
     <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184700-GB9GXRTH7I8BTTE89RZ4/image+%2814%29.png" class="photo" data-theme="design" />
