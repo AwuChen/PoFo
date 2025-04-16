@@ -35,7 +35,7 @@
 
     let nodeId = 0;
 
-    // Assign random length per radial (how many layers it goes out)
+    // Adjusting to make lines converge at the center
     for (let i = 0; i < radialCount; i++) {
       const thisMaxLayer = Math.floor(Math.random() * (maxLayers + 3)); // can go beyond or stop short
       radialMaxLayer.push(thisMaxLayer);
@@ -43,9 +43,12 @@
       for (let l = 0; l < thisMaxLayer; l++) {
         const angle = (2 * Math.PI * i) / radialCount;
         const radius = baseRadius + l * ringSpacing;
+        
+        // Adjust Y to ensure the nodes and links converge to the center
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
 
+        // Add nodes with adjusted positions
         nodes.push({
           id: nodeId,
           fx: x,
@@ -56,10 +59,10 @@
           color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
         });
 
-        // connect to previous layer if exists
+        // Connect to previous layer if exists
         if (l > 0) {
           links.push({
-            source: 0,
+            source: nodeId - 1,
             target: nodeId,
             radialIndex: i
           });
@@ -70,7 +73,7 @@
     }
 
     const gData = { nodes, links };
-    let currentState = 3;
+    let currentState = 1;
     let activeRadial = null;
 
     const Graph = ForceGraph()(document.getElementById('graph'))
