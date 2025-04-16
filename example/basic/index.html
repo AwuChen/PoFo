@@ -94,7 +94,7 @@
     .enableNodeDrag(false)
     .onEngineTick(() => Graph.pauseAnimation())
     .linkWidth(link => currentState === 2 ? 0 : (link.radialIndex === activeRadial ? 2 : 1))
-    .linkColor(link => currentState === 2 ? 'transparent' : (link.radialIndex === activeRadial ? '#f00' : '#aaa'))
+    .linkColor(link => currentState === 2 ? 'transparent' : (link.radialIndex === activeRadial ? '#aaa' : '#aaa'))
     .onNodeHover(node => {
       activeRadial = node ? node.radialIndex : null;
         Graph.graphData(gData); // redraw
