@@ -1,0 +1,135 @@
+<head> 
+  <style> 
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; position: absolute; top: 0; left: 0; z-index: 0; }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background: rgba(255,255,255,0.9);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: sans-serif;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
+</head>
+
+<body>
+  <div id="controls">
+    <button onclick="setState(1)">State 1: Lines Only</button>
+    <button onclick="setState(2)">State 2: Grid Only</button>
+    <button onclick="setState(3)">State 3: + Nodes</button>
+  </div>
+  <div id="graph"></div>
+
+  <script>
+    const radialCount = 30;
+    const maxLayers = 5;
+    const ringSpacing = 80;
+    const baseRadius = 100;
+
+    const nodes = [], links = [];
+    const radialMaxLayer = [];
+
+    let nodeId = 0;
+
+    // Add central node at the origin
+    const centerNodeId = nodeId++;
+    nodes.push({
+      id: centerNodeId,
+      fx: 0,
+      fy: 0,
+      size: 4,
+      color: '#000000',
+    });
+
+    // Adjusting to make lines converge at the center
+    for (let i = 0; i < radialCount; i++) {
+      const thisMaxLayer = Math.floor(Math.random() * (maxLayers + 3));
+      radialMaxLayer.push(thisMaxLayer);
+
+      for (let l = 0; l < thisMaxLayer; l++) {
+        const angle = (2 * Math.PI * i) / radialCount;
+        const radius = baseRadius + l * ringSpacing;
+
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
+
+        nodes.push({
+          id: nodeId,
+          fx: x,
+          fy: y,
+          radialIndex: i,
+          layer: l,
+          size: Math.random() * 6 + 2,
+          color: ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'][Math.floor(Math.random() * 5)]
+        });
+
+        if (l === 0) {
+          links.push({
+            source: centerNodeId,
+            target: nodeId,
+            radialIndex: i
+          });
+        } else {
+          links.push({
+            source: nodeId - 1,
+            target: nodeId,
+            radialIndex: i
+          });
+        }
+
+        nodeId++;
+      }
+    }
+
+    const gData = { nodes, links };
+    let currentState = 3;
+    let activeRadial = null;
+
+    const Graph = ForceGraph()(document.getElementById('graph'))
+    .graphData(gData)
+    .enableNodeDrag(false)
+    .onEngineTick(() => Graph.pauseAnimation())
+    .linkWidth(link => currentState === 2 ? 1 : (link.radialIndex === activeRadial ? 2 : 1))
+    .linkColor(link => currentState === 2 ? 'transparent' : (link.radialIndex === activeRadial ? '#aaa' : '#aaa'))
+    .onNodeHover(node => {
+      activeRadial = node ? node.radialIndex : null;
+        Graph.graphData(gData); // redraw
+      })
+    .nodeCanvasObject((node, ctx, globalScale) => {
+        // Draw grid rings once
+      if (node.id === 0 && currentState >= 2) {
+        ctx.save();
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1 / globalScale;
+        for (let i = 0; i < maxLayers; i++) {
+          ctx.beginPath();
+          ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      if (node.id === 0 || currentState < 3) return // skip drawing central node 
+
+      const isHighlighted = node.radialIndex === activeRadial;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
+      ctx.fillStyle = node.color;
+      ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+
+    function setState(state) {
+      currentState = state;
+      activeRadial = null;
+      Graph.graphData(gData);
+    }
+
+    setState(1);
+  </script>
+</body>
