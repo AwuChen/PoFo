@@ -27,63 +27,48 @@
   <div id="graph"></div>
 
   <script>
-    const radialCount = 30;
-    const maxLayers = 5;
-    const ringSpacing = 80;
-    const baseRadius = 100;
+  const radialLines = [
+    { name: 'URF / TX The BOX', category: 'Investment' },
+    { name: 'SAUVEREIGN', category: 'Forces' },
+    { name: 'DONGHAI', category: 'Consultancies' },
+    { name: 'EASTERN SEAS', category: 'Cities.culture.art' },
+    { name: 'DANDELION', category: 'Ecosystems' },
+    { name: 'BILI Q', category: 'Yesteryears' },
+    { name: 'KYOTO ART BANK', category: 'Cities.culture.art' },
+    { name: 'ARAMIS WINES', category: 'Investment' }
+  ];
 
-    const ringColors = ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'];
-    const nodes = [], links = [];
-    const radialMaxLayer = [];
+  const radialCount = radialLines.length;
+  const maxLayers = 5;
+  const ringSpacing = 80;
+  const baseRadius = 100;
 
-    let nodeId = 0;
+  const ringColors = ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'];
+  const nodes = [], links = [];
+  const radialMaxLayer = [];
 
-    // Central node at the origin
-    const centerNodeId = nodeId++;
-    nodes.push({
-      id: centerNodeId,
-      fx: 0,
-      fy: 0,
-      size: 4,
-      color: '#000000',
-    });
+  let nodeId = 0;
 
-    for (let i = 0; i < radialCount; i++) {
-      const thisMaxLayer = Math.floor(Math.random() * maxLayers) + 1; // Ensure at least 1 ring
-      radialMaxLayer.push(thisMaxLayer);
+  // Central node at the origin
+  const centerNodeId = nodeId++;
+  nodes.push({
+    id: centerNodeId,
+    fx: 0,
+    fy: 0,
+    size: 4,
+    color: '#000000',
+  });
 
-      let lastNodeId = centerNodeId;
+  radialLines.forEach((line, i) => {
+    const thisMaxLayer = Math.floor(Math.random() * maxLayers) + 1;
+    radialMaxLayer.push(thisMaxLayer);
 
-      for (let l = 0; l < thisMaxLayer; l++) {
-        const angle = (2 * Math.PI * i) / radialCount;
-        const radius = baseRadius + l * ringSpacing;
+    let lastNodeId = centerNodeId;
 
-        const x = radius * Math.cos(angle);
-        const y = radius * Math.sin(angle);
-
-        nodes.push({
-          id: nodeId,
-          fx: x,
-          fy: y,
-          radialIndex: i,
-          layer: l,
-          size: Math.random() * 6 + 2,
-          color: ringColors[l % ringColors.length]
-        });
-
-        links.push({
-          source: lastNodeId,
-          target: nodeId,
-          radialIndex: i
-        });
-
-        lastNodeId = nodeId;
-        nodeId++;
-      }
-
-      // Add a tip node slightly beyond the last circle
+    for (let l = 0; l < thisMaxLayer; l++) {
       const angle = (2 * Math.PI * i) / radialCount;
-      const radius = baseRadius + thisMaxLayer * ringSpacing + 20; // Extend tip
+      const radius = baseRadius + l * ringSpacing;
+
       const x = radius * Math.cos(angle);
       const y = radius * Math.sin(angle);
 
@@ -92,10 +77,11 @@
         fx: x,
         fy: y,
         radialIndex: i,
-        layer: thisMaxLayer,
-        size: 0,
-        color: 'transparent',
-        invisible: true
+        layer: l,
+        name: line.name,
+        category: line.category,
+        size: Math.random() * 6 + 2,
+        color: ringColors[l % ringColors.length]
       });
 
       links.push({
@@ -104,55 +90,89 @@
         radialIndex: i
       });
 
+      lastNodeId = nodeId;
       nodeId++;
     }
 
-    const gData = { nodes, links };
-    let currentState = 3;
-    let activeRadial = null;
+    const angle = (2 * Math.PI * i) / radialCount;
+    const radius = baseRadius + thisMaxLayer * ringSpacing + 20;
+    const x = radius * Math.cos(angle);
+    const y = radius * Math.sin(angle);
 
-    const Graph = ForceGraph()(document.getElementById('graph'))
-      .graphData(gData)
-      .enableNodeDrag(false)
-      .onEngineTick(() => Graph.pauseAnimation())
-      .linkWidth(link => currentState === 2 ? 1 : (link.radialIndex === activeRadial ? 2 : 1))
-      .linkColor(link => currentState === 2 ? 'transparent' : (link.radialIndex === activeRadial ? '#aaa' : '#aaa'))
-      .onNodeHover(node => {
-        activeRadial = node ? node.radialIndex : null;
-        Graph.graphData(gData);
-      })
-      .nodeCanvasObject((node, ctx, globalScale) => {
-        if (node.id === 0 && currentState >= 2) {
-          // Draw grid rings
-          ctx.save();
-          ctx.strokeStyle = '#ddd';
-          ctx.lineWidth = 1 / globalScale;
-          for (let i = 0; i < maxLayers; i++) {
-            ctx.beginPath();
-            ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
-            ctx.stroke();
-          }
-          ctx.restore();
-        }
+    nodes.push({
+      id: nodeId,
+      fx: x,
+      fy: y,
+      radialIndex: i,
+      layer: thisMaxLayer,
+      name: line.name,
+      category: line.category,
+      size: 0,
+      color: 'transparent',
+      invisible: true
+    });
 
-        if (node.invisible || node.id === 0 || currentState < 3) return;
+    links.push({
+      source: lastNodeId,
+      target: nodeId,
+      radialIndex: i
+    });
 
-        const isHighlighted = node.radialIndex === activeRadial;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
-        ctx.fillStyle = node.color;
-        ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      });
+    nodeId++;
+  });
 
-    function setState(state) {
-      currentState = state;
-      activeRadial = null;
+  const gData = { nodes, links };
+  let currentState = 3;
+  let activeRadial = null;
+
+  const Graph = ForceGraph()(document.getElementById('graph'))
+    .graphData(gData)
+    .enableNodeDrag(false)
+    .onEngineTick(() => Graph.pauseAnimation())
+    .linkWidth(link => currentState === 2 ? 1 : (link.radialIndex === activeRadial ? 2 : 1))
+    .linkColor(link => currentState === 2 ? 'transparent' : (link.radialIndex === activeRadial ? '#aaa' : '#aaa'))
+    .onNodeHover(node => {
+      activeRadial = node ? node.radialIndex : null;
       Graph.graphData(gData);
-    }
+    })
+    .nodeCanvasObject((node, ctx, globalScale) => {
+      if (node.id === 0 && currentState >= 2) {
+        ctx.save();
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1 / globalScale;
+        for (let i = 0; i < maxLayers; i++) {
+          ctx.beginPath();
+          ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
 
-    setState(1);
-  </script>
+      if (node.invisible || node.id === 0 || currentState < 3) return;
+
+      const isHighlighted = node.radialIndex === activeRadial;
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
+      ctx.fillStyle = node.color;
+      ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Optional: draw text labels
+      if (isHighlighted) {
+        ctx.font = `${12 / globalScale}px sans-serif`;
+        ctx.fillStyle = '#333';
+        ctx.fillText(node.name, node.x + 6, node.y + 4);
+      }
+    });
+
+  function setState(state) {
+    currentState = state;
+    activeRadial = null;
+    Graph.graphData(gData);
+  }
+
+  setState(1);
+</script>
 </body>
 </html>
