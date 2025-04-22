@@ -1,40 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Radial Graph with Categories & Impacts</title>
-  <style>
+<head> 
+  <style> 
     body { margin: 0; overflow: hidden; }
     canvas { display: block; position: absolute; top: 0; left: 0; z-index: 0; }
-    #controls, #filter-panel {
+    #controls {
       position: absolute;
       top: 10px;
       left: 10px;
       z-index: 10;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.95);
       padding: 10px;
       border-radius: 8px;
       font-family: sans-serif;
+      max-height: 90vh;
+      overflow: auto;
     }
-    #filter-panel {
-      top: 130px;
-      max-width: 250px;
-    }
-    #filter-panel label {
-      display: block;
-      margin-bottom: 4px;
-    }
+    .section-title { font-weight: bold; margin-top: 10px; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
 </head>
-<body>
 
-  <div id="filter-panel">
-    <strong>PORTFOLIO & CATEGORIES</strong><br>
-    <div id="category-filters"></div>
-    <br>
-    <strong>APPROACH & IMPACT</strong><br>
-    <div id="impact-filters"></div>
+<body>
+  <div id="controls">
+    <div class="section-title">PORTFOLIO & CATEGORIES</div>
+    <label><input type="checkbox" class="filter-category" value="Investment"> Investment</label><br>
+    <label><input type="checkbox" class="filter-category" value="Forces"> Forces</label><br>
+    <label><input type="checkbox" class="filter-category" value="Consultancies"> Consultancies</label><br>
+    <label><input type="checkbox" class="filter-category" value="Cities.culture.art"> Cities.culture.art</label><br>
+    <label><input type="checkbox" class="filter-category" value="Ecosystems"> Ecosystems</label><br>
+    <label><input type="checkbox" class="filter-category" value="Yesteryears"> Yesteryears</label><br>
+
+    <div class="section-title">APPROACH & IMPACT</div>
+    <label><input type="checkbox" class="filter-impact" value="Strategy.Culture"> Strategy.Culture</label><br>
+    <label><input type="checkbox" class="filter-impact" value="Branding"> Branding</label><br>
+    <label><input type="checkbox" class="filter-impact" value="Retail"> Retail</label><br>
+    <label><input type="checkbox" class="filter-impact" value="East.West"> East.West</label><br>
+    <label><input type="checkbox" class="filter-impact" value="Edu.Learning.Collective"> Edu.Learning.Collective</label><br>
+    <label><input type="checkbox" class="filter-impact" value="Creative Solution"> Creative Solution</label><br>
   </div>
 
   <div id="graph"></div>
@@ -42,22 +45,32 @@
   <script>
     const baseRadius = 100;
     const ringSpacing = 80;
+    const maxLayers = 6;
+
+    const impactToRing = {
+      "Strategy.Culture": 1,
+      "Branding": 2,
+      "Retail": 3,
+      "East.West": 4,
+      "Edu.Learning.Collective": 5,
+      "Creative Solution": 6
+    };
+
     const ringColors = ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b'];
-    const allCategories = ['Investment', 'Forces', 'Consultancies', 'Cities.culture.art', 'Ecosystems', 'Yesteryears'];
-    const allImpacts = ['Strategy.Culture', 'Branding', 'Retail', 'East.West', 'Edu.Learning.Collective', 'Creative Solution'];
 
     const radialLines = [
-      { name: 'URF / TX The BOX', categories: ['Investment'], impacts: ['Retail'] },
-      { name: 'SAUVEREIGN', categories: ['Consultancies'], impacts: ['Branding'] },
-      { name: 'DONGHAI', categories: ['Forces'], impacts: ['East.West', 'Strategy.Culture'] },
-      { name: 'EASTERN SEAS', categories: ['Cities.culture.art'], impacts: ['Creative Solution'] },
-      { name: 'DANDELION', categories: ['Ecosystems'], impacts: ['Edu.Learning.Collective'] },
-      { name: 'BILI Q', categories: ['Yesteryears'], impacts: ['Retail', 'Branding'] },
-      { name: 'KYOTO ART BANK', categories: ['Investment', 'Cities.culture.art'], impacts: ['Strategy.Culture'] },
-      { name: 'ARAMIS WINES', categories: ['Forces'], impacts: ['East.West', 'Branding'] }
+      { name: "URF / TX The BOX", categories: ["Investment"], impacts: ["Retail"] },
+      { name: "SAUVEREIGN", categories: ["Consultancies"], impacts: ["Branding", "Retail"] },
+      { name: "DONGHAI", categories: ["Ecosystems"], impacts: ["East.West", "Strategy.Culture"] },
+      { name: "EASTERN SEAS", categories: ["Yesteryears"], impacts: ["Strategy.Culture"] },
+      { name: "DANDELION", categories: ["Cities.culture.art"], impacts: ["Edu.Learning.Collective"] },
+      { name: "BILI Q", categories: ["Forces"], impacts: ["Creative Solution", "Strategy.Culture"] },
+      { name: "KYOTO ART BANK", categories: ["Cities.culture.art"], impacts: ["Edu.Learning.Collective", "East.West"] },
+      { name: "ARAMIS WINES", categories: ["Investment", "Yesteryears"], impacts: ["Branding", "East.West"] }
     ];
 
-    const nodes = [], links = [];
+    const nodes = [];
+    const links = [];
     let nodeId = 0;
 
     const centerNodeId = nodeId++;
@@ -65,93 +78,82 @@
       id: centerNodeId,
       fx: 0,
       fy: 0,
-      size: 4,
+      size: 6,
       color: '#000000'
     });
 
     radialLines.forEach((line, i) => {
-      let lastNodeId = centerNodeId;
       const angle = (2 * Math.PI * i) / radialLines.length;
+      const radialIndex = i;
+      let lastNodeId = centerNodeId;
 
-      line.impacts.forEach(impact => {
-        const layer = allImpacts.indexOf(impact); // map each impact to a ring index
+      line.impacts.forEach((impact, j) => {
+        const layer = impactToRing[impact] - 1;
         const radius = baseRadius + layer * ringSpacing;
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
 
-        const node = {
-          id: nodeId,
+        const thisNodeId = nodeId++;
+        nodes.push({
+          id: thisNodeId,
           fx: x,
           fy: y,
-          radialIndex: i,
+          radialIndex,
           name: line.name,
           categories: line.categories,
           impacts: line.impacts,
-          size: 6,
+          impact,
+          size: 5,
           color: ringColors[layer % ringColors.length]
-        };
+        });
 
-        nodes.push(node);
-        links.push({ source: lastNodeId, target: nodeId });
-        lastNodeId = nodeId;
-        nodeId++;
+        links.push({
+          source: lastNodeId,
+          target: thisNodeId,
+          radialIndex
+        });
+
+        lastNodeId = thisNodeId;
       });
     });
 
     const gData = { nodes, links };
-    let currentState = 3;
-    let activeRadial = null;
 
     const Graph = ForceGraph()(document.getElementById('graph'))
-    .graphData(gData)
-    .enableNodeDrag(false)
-    .onEngineTick(() => Graph.pauseAnimation())
-    .linkWidth(link => currentState === 2 ? 1 : 1)
-    .linkColor(() => '#aaa')
-    .onNodeHover(node => {
-      activeRadial = node ? node.radialIndex : null;
-        Graph.graphData(Graph.graphData()); // refresh
-      })
-    .nodeCanvasObject((node, ctx, globalScale) => {
-      if (node.id === 0 && currentState >= 2) {
-        ctx.save();
-        ctx.strokeStyle = '#ddd';
-        ctx.lineWidth = 1 / globalScale;
-        for (let i = 0; i < allImpacts.length; i++) {
-          ctx.beginPath();
-          ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
-          ctx.stroke();
+      .graphData(gData)
+      .enableNodeDrag(false)
+      .onEngineTick(() => Graph.pauseAnimation())
+      .linkWidth(() => 2)
+      .linkColor(() => '#aaa')
+      .nodeCanvasObject((node, ctx, globalScale) => {
+        if (node.id === centerNodeId) {
+          // Draw rings
+          ctx.save();
+          ctx.strokeStyle = '#ddd';
+          ctx.lineWidth = 1 / globalScale;
+          for (let i = 0; i < maxLayers; i++) {
+            ctx.beginPath();
+            ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+            ctx.stroke();
+          }
+          ctx.restore();
+          return;
         }
-        ctx.restore();
-      }
 
-      if (node.id === 0 || currentState < 3) return;
+        const label = node.name || '';
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
+        ctx.fillStyle = node.color;
+        ctx.fill();
 
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
-      ctx.fillStyle = node.color;
-      ctx.globalAlpha = activeRadial === null || node.radialIndex === activeRadial ? 1 : 0.1;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    });
-
-    function setState(state) {
-      currentState = state;
-      activeRadial = null;
-      Graph.graphData(Graph.graphData());
-    }
-
-    function createCheckboxGroup(containerId, options, groupType) {
-      const container = document.getElementById(containerId);
-      options.forEach(opt => {
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="checkbox" value="${opt}" data-group="${groupType}"> ${opt}`;
-        container.appendChild(label);
+        ctx.font = `${12 / globalScale}px Sans-Serif`;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#000';
+        ctx.fillText(label, node.x, node.y - 8);
       });
-    }
 
-    function getCheckedFilters(group) {
-      return Array.from(document.querySelectorAll(`input[data-group="${group}"]:checked`)).map(el => el.value);
+    function getCheckedFilters(className) {
+      return Array.from(document.querySelectorAll(`.filter-${className}:checked`)).map(cb => cb.value);
     }
 
     function applyFilters() {
@@ -160,41 +162,31 @@
 
       const radialToInclude = new Set();
 
-  // Step 1: Find which radial lines match the filter
       nodes.forEach(n => {
-    if (!n.name) return; // skip center node
-    const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
-    const impMatch = selectedImpacts.length === 0 || selectedImpacts.some(imp => n.impacts.includes(imp));
-    if (catMatch && impMatch) {
-      radialToInclude.add(n.radialIndex);
-    }
-  });
+        if (!n.name) return;
+        const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
+        const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
+        if (catMatch && impMatch) {
+          radialToInclude.add(n.radialIndex);
+        }
+      });
 
-  // Step 2: Include all nodes (even intermediate) for matched radials
       const filteredNodes = nodes.filter(n =>
         n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
-        );
+      );
 
-      const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
+      const nodeIdSet = new Set(filteredNodes.map(n => n.id));
 
-  // Step 3: Include links where both ends are still visible
       const filteredLinks = links.filter(link =>
-        filteredNodeIds.has(link.source) && filteredNodeIds.has(link.target)
-        );
+        nodeIdSet.has(link.source) && nodeIdSet.has(link.target)
+      );
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
     }
 
-
-    createCheckboxGroup('category-filters', allCategories, 'category');
-    createCheckboxGroup('impact-filters', allImpacts, 'impact');
-
-    document.querySelectorAll('#filter-panel input').forEach(el =>
-      el.addEventListener('change', applyFilters)
-      );
-
-    setState(3);
-    applyFilters();
+    document.querySelectorAll('.filter-category, .filter-impact').forEach(cb =>
+      cb.addEventListener('change', applyFilters)
+    );
   </script>
 </body>
 </html>
