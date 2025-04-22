@@ -103,37 +103,37 @@
     let activeRadial = null;
 
     const Graph = ForceGraph()(document.getElementById('graph'))
-      .graphData(gData)
-      .enableNodeDrag(false)
-      .onEngineTick(() => Graph.pauseAnimation())
-      .linkWidth(link => currentState === 2 ? 1 : 1)
-      .linkColor(() => '#aaa')
-      .onNodeHover(node => {
-        activeRadial = node ? node.radialIndex : null;
+    .graphData(gData)
+    .enableNodeDrag(false)
+    .onEngineTick(() => Graph.pauseAnimation())
+    .linkWidth(link => currentState === 2 ? 1 : 1)
+    .linkColor(() => '#aaa')
+    .onNodeHover(node => {
+      activeRadial = node ? node.radialIndex : null;
         Graph.graphData(Graph.graphData()); // refresh
       })
-      .nodeCanvasObject((node, ctx, globalScale) => {
-        if (node.id === 0 && currentState >= 2) {
-          ctx.save();
-          ctx.strokeStyle = '#ddd';
-          ctx.lineWidth = 1 / globalScale;
-          for (let i = 0; i < allImpacts.length; i++) {
-            ctx.beginPath();
-            ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
-            ctx.stroke();
-          }
-          ctx.restore();
+    .nodeCanvasObject((node, ctx, globalScale) => {
+      if (node.id === 0 && currentState >= 2) {
+        ctx.save();
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1 / globalScale;
+        for (let i = 0; i < allImpacts.length; i++) {
+          ctx.beginPath();
+          ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+          ctx.stroke();
         }
+        ctx.restore();
+      }
 
-        if (node.id === 0 || currentState < 3) return;
+      if (node.id === 0 || currentState < 3) return;
 
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
-        ctx.fillStyle = node.color;
-        ctx.globalAlpha = activeRadial === null || node.radialIndex === activeRadial ? 1 : 0.1;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      });
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
+      ctx.fillStyle = node.color;
+      ctx.globalAlpha = activeRadial === null || node.radialIndex === activeRadial ? 1 : 0.1;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
 
     function setState(state) {
       currentState = state;
@@ -158,25 +158,40 @@
       const selectedCategories = getCheckedFilters('category');
       const selectedImpacts = getCheckedFilters('impact');
 
-      const filteredNodes = nodes.filter(n => {
-        if (!n.name) return false;
-        const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
-        const impMatch = selectedImpacts.length === 0 || selectedImpacts.some(imp => n.impacts.includes(imp));
-        return catMatch && impMatch;
-      });
+      const radialToInclude = new Set();
 
-      const visibleNodeIds = new Set(filteredNodes.map(n => n.id).concat(centerNodeId));
-      const filteredLinks = links.filter(link => visibleNodeIds.has(link.source) && visibleNodeIds.has(link.target));
-
-      Graph.graphData({ nodes: [...filteredNodes, nodes[0]], links: filteredLinks });
+  // Step 1: Find which radial lines match the filter
+      nodes.forEach(n => {
+    if (!n.name) return; // skip center node
+    const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
+    const impMatch = selectedImpacts.length === 0 || selectedImpacts.some(imp => n.impacts.includes(imp));
+    if (catMatch && impMatch) {
+      radialToInclude.add(n.radialIndex);
     }
+  });
+
+  // Step 2: Include all nodes (even intermediate) for matched radials
+      const filteredNodes = nodes.filter(n =>
+        n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
+        );
+
+      const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
+
+  // Step 3: Include links where both ends are still visible
+      const filteredLinks = links.filter(link =>
+        filteredNodeIds.has(link.source) && filteredNodeIds.has(link.target)
+        );
+
+      Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
+    }
+
 
     createCheckboxGroup('category-filters', allCategories, 'category');
     createCheckboxGroup('impact-filters', allImpacts, 'impact');
 
     document.querySelectorAll('#filter-panel input').forEach(el =>
       el.addEventListener('change', applyFilters)
-    );
+      );
 
     setState(3);
     applyFilters();
