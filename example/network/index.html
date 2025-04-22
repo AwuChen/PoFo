@@ -47,21 +47,30 @@
     <div id="categoryFilters"></div>
   </div>
 
+  <div id="impactLegend" style="margin-top: 20px;">
+    <h4>IMPACT</h4>
+    <div id="impactFilters"></div>
+  </div>
+
   <div id="graph"></div>
 
   <script>
     const radialNames = [
-      { name: 'URF / TX The BOX', category: 'Investment' },
-      { name: 'SAUVEREIGN', category: 'Investment' },
-      { name: 'DONGHAI', category: 'Forces' },
-      { name: 'EASTERN SEAS', category: 'Forces' },
-      { name: 'DANDELION', category: 'Consultancies' },
-      { name: 'BILI Q', category: 'Cities.culture.art' },
-      { name: 'KYOTO ART BANK', category: 'Ecosystems' },
-      { name: 'ARAMIS WINES', category: 'Yesteryears' }
+      { name: 'URF / TX The BOX', category: 'Investment', impact: 'Retail' },
+      { name: 'SAUVEREIGN', category: 'Investment', impact: 'Branding' },
+      { name: 'DONGHAI', category: 'Forces', impact: 'East.West' },
+      { name: 'EASTERN SEAS', category: 'Forces', impact: 'Strategy.Culture' },
+      { name: 'DANDELION', category: 'Consultancies', impact: 'Edu.Learning.Collective' },
+      { name: 'BILI Q', category: 'Cities.culture.art', impact: 'Creative Solution' },
+      { name: 'KYOTO ART BANK', category: 'Ecosystems', impact: 'Edu.Learning.Collective' },
+      { name: 'ARAMIS WINES', category: 'Yesteryears', impact: 'Branding' }
     ];
 
+
     const categories = [...new Set(radialNames.map(r => r.category))];
+    const impacts = [...new Set(radialNames.map(r => r.impact))];
+    let filteredCategories = new Set(categories);
+    let filteredImpacts = new Set(impacts);
 
     const radialCount = radialNames.length;
     const maxLayers = 5;
@@ -144,38 +153,45 @@
     let activeRadial = null;
 
     const Graph = ForceGraph()(document.getElementById('graph'))
-      .graphData(gData)
-      .enableNodeDrag(false)
-      .onEngineTick(() => Graph.pauseAnimation())
-      .linkWidth(link => (filteredCategories.has(link.category) && (currentState !== 2 || link.radialIndex === activeRadial)) ? 2 : 0)
-      .linkColor(link => filteredCategories.has(link.category) ? '#aaa' : 'transparent')
-      .onNodeHover(node => {
-        activeRadial = node ? node.radialIndex : null;
-        Graph.graphData(gData);
-      })
-      .nodeCanvasObject((node, ctx, globalScale) => {
-        if (node.id === 0 && currentState >= 2) {
-          ctx.save();
-          ctx.strokeStyle = '#ddd';
-          ctx.lineWidth = 1 / globalScale;
-          for (let i = 0; i < maxLayers; i++) {
-            ctx.beginPath();
-            ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
-            ctx.stroke();
-          }
-          ctx.restore();
+    .graphData(gData)
+    .enableNodeDrag(false)
+    .onEngineTick(() => Graph.pauseAnimation())
+    linkWidth(link =>
+      filteredCategories.has(link.category) &&
+      filteredImpacts.has(link.impact) &&
+      (currentState !== 2 || link.radialIndex === activeRadial) ? 2 : 0
+      )
+    .linkColor(link => filteredCategories.has(link.category) ? '#aaa' : 'transparent')
+    .onNodeHover(node => {
+      activeRadial = node ? node.radialIndex : null;
+      Graph.graphData(gData);
+    })
+    .nodeCanvasObject((node, ctx, globalScale) => {
+      if (node.id === 0 && currentState >= 2) {
+        ctx.save();
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1 / globalScale;
+        for (let i = 0; i < maxLayers; i++) {
+          ctx.beginPath();
+          ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+          ctx.stroke();
         }
+        ctx.restore();
+      }
 
-        if (node.invisible || node.id === 0 || currentState < 3 || !filteredCategories.has(node.category)) return;
+      if (
+        node.invisible || node.id === 0 || currentState < 3 ||
+        !filteredCategories.has(node.category) || !filteredImpacts.has(node.impact)
+        ) return;
 
         const isHighlighted = node.radialIndex === activeRadial;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
-        ctx.fillStyle = node.color;
-        ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      });
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
+      ctx.fillStyle = node.color;
+      ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
 
     function setState(state) {
       currentState = state;
@@ -208,7 +224,33 @@
       });
     }
 
+    function buildImpactLegend() {
+      const container = document.getElementById('impactFilters');
+      impacts.forEach(impact => {
+        const label = document.createElement('label');
+        label.style.display = 'block';
+        label.style.marginBottom = '5px';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = true;
+        checkbox.onchange = () => {
+          if (checkbox.checked) {
+            filteredImpacts.add(impact);
+          } else {
+            filteredImpacts.delete(impact);
+          }
+          Graph.graphData(gData);
+        };
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(' ' + impact));
+        container.appendChild(label);
+      });
+    }
+
     buildLegend();
+    buildImpactLegend();
     setState(1);
   </script>
 </body>
