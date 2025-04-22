@@ -104,12 +104,12 @@
       .linkDirectionalParticles(0)
       .linkWidth(() => 2)
       .linkColor(() => '#aaa')
-      .nodeCanvasObject((node, ctx, globalScale) => {
+      .nodeCanvasObject((node, ctx) => {
        if (node.id === centerNodeId) {
           // Draw rings
           ctx.save();
           ctx.strokeStyle = '#ddd';
-          ctx.lineWidth = 1 / globalScale;
+          ctx.lineWidth = 1;
           for (let i = 0; i < maxLayers; i++) {
             ctx.beginPath();
             ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
