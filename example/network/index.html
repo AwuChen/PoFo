@@ -117,7 +117,8 @@
           }
           ctx.restore();
           return;
-        });
+        }
+      });
 
     // Filters UI
     const allCategories = [...new Set(entities.flatMap(e => e.categories))];
