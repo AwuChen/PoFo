@@ -86,14 +86,17 @@
     nodes.push({ id: centerNodeId, fx: 0, fy: 0, size: 4, color: '#000000' });
 
     for (let i = 0; i < radialCount; i++) {
-      const nameData = radialNames[i];
-      const thisMaxLayer = Math.floor(Math.random() * maxLayers) + 1;
+      const radialInfo = radialNames[i % radialNames.length];
+      const impactArray = Array.isArray(radialInfo.impact) ? radialInfo.impact : [radialInfo.impact];
+      const thisMaxLayer = impactArray.length;
+
       radialMaxLayer.push(thisMaxLayer);
       let lastNodeId = centerNodeId;
 
       for (let l = 0; l < thisMaxLayer; l++) {
         const angle = (2 * Math.PI * i) / radialCount;
         const radius = baseRadius + l * ringSpacing;
+
         const x = radius * Math.cos(angle);
         const y = radius * Math.sin(angle);
 
@@ -103,23 +106,26 @@
           fy: y,
           radialIndex: i,
           layer: l,
-          name: nameData.name,
-          category: nameData.category,
-          size: Math.random() * 6 + 2,
-          color: ringColors[l % ringColors.length]
-        });
+          size: 6,
+          color: ringColors[l % ringColors.length],
+          name: radialInfo.name,
+          category: radialInfo.category,
+      impact: impactArray[l] // assign specific impact to this node
+    });
 
         links.push({
           source: lastNodeId,
           target: nodeId,
           radialIndex: i,
-          category: nameData.category
+          category: radialInfo.category,
+          impact: impactArray[l]
         });
 
         lastNodeId = nodeId;
         nodeId++;
       }
 
+  // Add invisible tip node
       const angle = (2 * Math.PI * i) / radialCount;
       const radius = baseRadius + thisMaxLayer * ringSpacing + 20;
       const x = radius * Math.cos(angle);
@@ -131,17 +137,20 @@
         fy: y,
         radialIndex: i,
         layer: thisMaxLayer,
-        category: nameData.category,
         size: 0,
         color: 'transparent',
-        invisible: true
+        invisible: true,
+        name: radialInfo.name,
+        category: radialInfo.category,
+        impact: null
       });
 
       links.push({
         source: lastNodeId,
         target: nodeId,
         radialIndex: i,
-        category: nameData.category
+        category: radialInfo.category,
+        impact: null
       });
 
       nodeId++;
