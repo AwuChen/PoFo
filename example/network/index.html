@@ -51,15 +51,16 @@
 
   <script>
     const radialNames = [
-      { name: 'URF / TX The BOX', category: 'Investment', impact: ['Retail', 'Branding', 'East.West'] },
-      { name: 'SAUVEREIGN', category: 'Forces', impact: ['Strategy.Culture'] },
-      { name: 'DONGHAI', category: 'Consultancies', impact: ['East.West', 'Strategy.Culture'] },
-      { name: 'EASTERN SEAS', category: 'Cities.culture.art', impact: ['Edu.Learning.Collective'] },
-      { name: 'DANDELION', category: 'Ecosystems', impact: ['Creative Solution', 'Branding'] },
-      { name: 'BILI Q', category: 'Yesteryears', impact: ['Retail'] },
-      { name: 'KYOTO ART BANK', category: 'Cities.culture.art', impact: ['Edu.Learning.Collective', 'Strategy.Culture'] },
-      { name: 'ARAMIS WINES', category: 'Investment', impact: ['Retail', 'East.West'] }
+      { name: 'URF / TX The BOX', category: ['Investment'], impact: ['Retail'] },
+      { name: 'SAUVEREIGN', category: ['Forces', 'Consultancies'], impact: ['Branding', 'Retail'] },
+      { name: 'DONGHAI', category: ['Forces'], impact: ['East.West', 'Strategy.Culture'] },
+      { name: 'EASTERN SEAS', category: ['Investment', 'Consultancies'], impact: ['Retail', 'Creative Solution'] },
+      { name: 'DANDELION', category: ['Cities.culture.art'], impact: ['Edu.Learning.Collective'] },
+      { name: 'BILI Q', category: ['Yesteryears'], impact: ['Strategy.Culture', 'East.West'] },
+      { name: 'KYOTO ART BANK', category: ['Ecosystems', 'Cities.culture.art'], impact: ['Creative Solution', 'Edu.Learning.Collective'] },
+      { name: 'ARAMIS WINES', category: ['Investment', 'Yesteryears'], impact: ['Branding', 'Retail'] }
     ];
+
 
 
     const categories = [...new Set(radialNames.map(r => r.category))];
@@ -91,11 +92,11 @@
 
     for (let i = 0; i < radialCount; i++) {
       const radialInfo = radialNames[i % radialNames.length];
-      const impactArray = Array.isArray(radialInfo.impact)
-      ? radialInfo.impact
-      : radialInfo.impact.split(',').map(i => i.trim());
+      const impactArray = Array.isArray(radialInfo.impact) ? radialInfo.impact : [radialInfo.impact];
+      const categoryArray = Array.isArray(radialInfo.category) ? radialInfo.category : [radialInfo.category];
+      
       radialMaxLayer.push(impactArray.length);
-
+      
       let lastNodeId = centerNodeId;
       const angle = (2 * Math.PI * i) / radialCount;
 
@@ -115,15 +116,17 @@
       size: 6,
       color: ringColors[ringIndex % ringColors.length],
       name: radialInfo.name,
-      category: radialInfo.category,
-      impact: impactType
+      categories: categoryArray,
+      impacts: impactArray,
+      impact: impactType // For filtering
     });
 
     links.push({
       source: lastNodeId,
       target: nodeId,
       radialIndex: i,
-      category: radialInfo.category,
+      categories: categoryArray,
+      impacts: impactArray,
       impact: impactType
     });
 
@@ -131,8 +134,9 @@
     nodeId++;
   });
 
-  // Add invisible tip node
-      const radius = baseRadius + (impactArray.length ? impactRingMap[impactArray[impactArray.length - 1]] : 1) * ringSpacing + 40;
+  // Add a tip node
+      const lastRingIndex = impactArray.length > 0 ? impactRingMap[impactArray[impactArray.length - 1]] : 1;
+      const radius = baseRadius + lastRingIndex * ringSpacing + 40;
       const x = radius * Math.cos(angle);
       const y = radius * Math.sin(angle);
 
@@ -146,20 +150,19 @@
         color: 'transparent',
         invisible: true,
         name: radialInfo.name,
-        category: radialInfo.category,
-        impact: null
+        categories: categoryArray,
+        impacts: impactArray
       });
 
       links.push({
         source: lastNodeId,
         target: nodeId,
-        radialIndex: i,
-        category: radialInfo.category,
-        impact: null
+        radialIndex: i
       });
 
       nodeId++;
     }
+
 
     const gData = { nodes, links };
     let currentState = 3;
