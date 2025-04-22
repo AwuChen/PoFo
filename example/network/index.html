@@ -104,7 +104,7 @@
       .linkDirectionalParticles(0)
       .linkWidth(() => 2)
       .linkColor(() => '#aaa')
-      .nodeCanvasObject((node, ctx) => {
+      .nodeCanvasObject((node, ctx, globalScale) => {
        if (node.id === centerNodeId) {
           // Draw rings
           ctx.save();
