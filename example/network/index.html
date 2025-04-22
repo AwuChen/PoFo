@@ -110,22 +110,6 @@
         ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
         ctx.fillStyle = node.color;
         ctx.fill();
-      })
-      .onRenderFrame(() => {
-        // Draw impact rings on every frame (so they stay visible)
-        const ctx = Graph.canvas().getContext('2d');
-        ctx.clearRect(0, 0, Graph.width(), Graph.height());
-
-        // Re-render the rings after each filter change
-        for (const impact of Object.keys(impactRingMap)) {
-          const ringIndex = impactRingMap[impact];
-          const radius = baseRadius + ringIndex * ringSpacing;
-          ctx.beginPath();
-          ctx.arc(0, 0, radius, 0, Math.PI * 2);
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = ringColors[ringIndex % ringColors.length];
-          ctx.stroke();
-        }
       });
 
     // Filters UI
