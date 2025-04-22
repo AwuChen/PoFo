@@ -155,7 +155,7 @@
     .graphData(gData)
     .enableNodeDrag(false)
     .onEngineTick(() => Graph.pauseAnimation())
-    linkWidth(link =>
+    .linkWidth(link =>
       filteredCategories.has(link.category) &&
       filteredImpacts.has(link.impact) &&
       (currentState !== 2 || link.radialIndex === activeRadial) ? 2 : 0
