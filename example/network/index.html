@@ -27,7 +27,7 @@
   <div id="controls">
     <h3>PORTFOLIO & CATEGORIES</h3>
     <div id="categoryFilters"></div>
-    <h3>IMPACT</h3>
+    <h3>APPROACH & IMPACT</h3>
     <div id="impactFilters"></div>
   </div>
   <div id="graph"></div>
@@ -98,19 +98,25 @@
 
     const gData = { nodes, links };
     const Graph = ForceGraph()(document.getElementById('graph'))
-      .graphData(gData)
-      .enableNodeDrag(false)
-      .linkDirectionalParticles(0)
-      .linkWidth(() => 1)
-      .linkColor(() => '#999')
-      .nodeCanvasObject((node, ctx) => {
-        if (node.id === centerNodeId) return;
-
+    .graphData(gData)
+    .enableNodeDrag(false)
+    .linkDirectionalParticles(0)
+    .linkWidth(() => 2)
+    .linkColor(() => '#aaa')
+    .nodeCanvasObject((node, ctx) => {
+     if (node.id === centerNodeId) {
+          // Draw rings
+      ctx.save();
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1 / globalScale;
+      for (let i = 0; i < maxLayers; i++) {
         ctx.beginPath();
-        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
-        ctx.fillStyle = node.color;
-        ctx.fill();
-      });
+        ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+      ctx.restore();
+      return;
+    }
 
     // Filters UI
     const allCategories = [...new Set(entities.flatMap(e => e.categories))];
@@ -156,17 +162,17 @@
 
       const filteredNodes = nodes.filter(n =>
         n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
-      );
+        );
 
       const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
 
       const filteredLinks = links
-        .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
-        .map(link => ({
-          source: nodeMap.get(link.source.id ?? link.source),
-          target: nodeMap.get(link.target.id ?? link.target),
-          radialIndex: link.radialIndex
-        }));
+      .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
+      .map(link => ({
+        source: nodeMap.get(link.source.id ?? link.source),
+        target: nodeMap.get(link.target.id ?? link.target),
+        radialIndex: link.radialIndex
+      }));
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
     }
