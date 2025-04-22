@@ -94,9 +94,9 @@
       const radialInfo = radialNames[i % radialNames.length];
       const impactArray = Array.isArray(radialInfo.impact) ? radialInfo.impact : [radialInfo.impact];
       const categoryArray = Array.isArray(radialInfo.category) ? radialInfo.category : [radialInfo.category];
-      
+
       radialMaxLayer.push(impactArray.length);
-      
+
       let lastNodeId = centerNodeId;
       const angle = (2 * Math.PI * i) / radialCount;
 
@@ -162,7 +162,6 @@
 
       nodeId++;
     }
-
 
     const gData = { nodes, links };
     let currentState = 3;
