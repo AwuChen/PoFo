@@ -52,13 +52,13 @@
   <script>
     const radialNames = [
       { name: 'URF / TX The BOX', category: 'Investment', impact: ['Retail', 'Branding', 'East.West'] },
-      { name: 'SAUVEREIGN', category: 'Investment', impact: 'Branding' },
-      { name: 'DONGHAI', category: 'Forces', impact: 'East.West' },
-      { name: 'EASTERN SEAS', category: 'Forces', impact: 'Strategy.Culture' },
-      { name: 'DANDELION', category: 'Consultancies', impact: 'Edu.Learning.Collective' },
-      { name: 'BILI Q', category: 'Cities.culture.art', impact: 'Creative Solution' },
-      { name: 'KYOTO ART BANK', category: 'Ecosystems', impact: 'Edu.Learning.Collective'},
-      { name: 'ARAMIS WINES', category: 'Yesteryears', impact: 'Branding' }
+      { name: 'SAUVEREIGN', category: 'Forces', impact: ['Strategy.Culture'] },
+      { name: 'DONGHAI', category: 'Consultancies', impact: ['East.West', 'Strategy.Culture'] },
+      { name: 'EASTERN SEAS', category: 'Cities.culture.art', impact: ['Edu.Learning.Collective'] },
+      { name: 'DANDELION', category: 'Ecosystems', impact: ['Creative Solution', 'Branding'] },
+      { name: 'BILI Q', category: 'Yesteryears', impact: ['Retail'] },
+      { name: 'KYOTO ART BANK', category: 'Cities.culture.art', impact: ['Edu.Learning.Collective', 'Strategy.Culture'] },
+      { name: 'ARAMIS WINES', category: 'Investment', impact: ['Retail', 'East.West'] }
     ];
 
 
@@ -91,7 +91,9 @@
 
     for (let i = 0; i < radialCount; i++) {
       const radialInfo = radialNames[i % radialNames.length];
-      const impactArray = Array.isArray(radialInfo.impact) ? radialInfo.impact : [radialInfo.impact];
+      const impactArray = Array.isArray(radialInfo.impact)
+      ? radialInfo.impact
+      : radialInfo.impact.split(',').map(i => i.trim());
       radialMaxLayer.push(impactArray.length);
 
       let lastNodeId = centerNodeId;
