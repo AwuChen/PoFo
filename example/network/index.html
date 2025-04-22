@@ -1,216 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Radial Impact Graph</title>
   <style>
     body { margin: 0; overflow: hidden; }
-    canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    #impactRingsCanvas {
-      z-index: 0;
-    }
-    #graph canvas {
-      z-index: 1;
-    }
+    canvas { display: block; position: absolute; top: 0; left: 0; z-index: 0; }
     #controls {
       position: absolute;
       top: 10px;
       left: 10px;
       z-index: 10;
       background: rgba(255,255,255,0.95);
-      padding: 12px;
-      border-radius: 10px;
+      padding: 10px;
+      border-radius: 8px;
       font-family: sans-serif;
-      font-size: 14px;
-      max-width: 240px;
+      max-height: 90vh;
+      overflow-y: auto;
     }
-    #controls h4 {
-      margin: 10px 0 5px;
+    #controls h3 {
+      margin-top: 10px;
+      margin-bottom: 5px;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
 </head>
 <body>
+  <div id="controls">
+    <h3>PORTFOLIO & CATEGORIES</h3>
+    <div id="categoryFilters"></div>
+    <h3>IMPACT</h3>
+    <div id="impactFilters"></div>
+  </div>
+  <div id="graph"></div>
 
-<canvas id="impactRingsCanvas"></canvas>
-<div id="graph"></div>
+  <script>
+    const entities = [
+      { name: 'URF / TX The BOX', categories: ['Investment'], impacts: ['Retail'] },
+      { name: 'SAUVEREIGN', categories: ['Forces'], impacts: ['Branding', 'Retail'] },
+      { name: 'DONGHAI', categories: ['Cities.culture.art'], impacts: ['East.West', 'Strategy.Culture'] },
+      { name: 'EASTERN SEAS', categories: ['Consultancies'], impacts: ['Creative Solution'] },
+      { name: 'DANDELION', categories: ['Yesteryears'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
+      { name: 'BILI Q', categories: ['Investment'], impacts: ['East.West'] },
+      { name: 'KYOTO ART BANK', categories: ['Ecosystems'], impacts: ['Culture', 'Creative Solution'] },
+      { name: 'ARAMIS WINES', categories: ['Yesteryears'], impacts: ['Branding'] }
+    ];
 
-<div id="controls">
-  <h4>PORTFOLIO & CATEGORIES</h4>
-  <div id="categoryFilters"></div>
-  <h4>IMPACT</h4>
-  <div id="impactFilters"></div>
-</div>
+    const impactRingMap = {
+      'Strategy.Culture': 0,
+      'Branding': 1,
+      'Retail': 2,
+      'East.West': 3,
+      'Edu.Learning.Collective': 4,
+      'Creative Solution': 5
+    };
 
-<script>
-  const projects = [
-    { name: 'URF / TX The BOX', category: 'Investment', impacts: ['Retail'] },
-    { name: 'SAUVEREIGN', category: 'Forces', impacts: ['Branding', 'Retail'] },
-    { name: 'DONGHAI', category: 'Consultancies', impacts: ['East.West', 'Strategy.Culture'] },
-    { name: 'EASTERN SEAS', category: 'Consultancies', impacts: ['East.West'] },
-    { name: 'DANDELION', category: 'Cities.culture.art', impacts: ['Creative Solution'] },
-    { name: 'BILI Q', category: 'Yesteryears', impacts: ['Edu.Learning.Collective'] },
-    { name: 'KYOTO ART BANK', category: 'Ecosystems', impacts: ['Edu.Learning.Collective'] },
-    { name: 'ARAMIS WINES', category: 'Investment', impacts: ['Branding', 'Retail'] }
-  ];
+    const ringSpacing = 80;
+    const baseRadius = 100;
+    const ringColors = ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b', '#8ecae6'];
 
-  const impactRingMap = {
-    'Strategy.Culture': 0,
-    'Branding': 1,
-    'Retail': 2,
-    'East.West': 3,
-    'Edu.Learning.Collective': 4,
-    'Creative Solution': 5
-  };
+    let nodeId = 0;
+    const nodes = [], links = [];
 
-  const ringColors = ['#bc6c25', '#dda15e', '#f4a261', '#e76f51', '#2a9d8f', '#264653'];
-  const baseRadius = 100;
-  const ringSpacing = 60;
+    const centerNodeId = nodeId++;
+    nodes.push({ id: centerNodeId, fx: 0, fy: 0, size: 4, color: '#000000' });
 
-  const radialCount = projects.length;
-  const nodes = [], links = [];
-  let nodeId = 0;
+    entities.forEach((entity, index) => {
+      const angle = (2 * Math.PI * index) / entities.length;
+      let lastNodeId = centerNodeId;
 
-  const centerNodeId = nodeId++;
-  nodes.push({ id: centerNodeId, fx: 0, fy: 0, size: 4, color: '#000' });
+      entity.impacts.forEach(impact => {
+        const ringIndex = impactRingMap[impact] ?? 0;
+        const radius = baseRadius + ringIndex * ringSpacing;
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
 
-  projects.forEach((proj, i) => {
-    const angle = (2 * Math.PI * i) / radialCount;
-    const name = proj.name;
+        const thisNodeId = nodeId++;
+        nodes.push({
+          id: thisNodeId,
+          fx: x,
+          fy: y,
+          name: entity.name,
+          categories: entity.categories,
+          impact: impact,
+          radialIndex: index,
+          size: 6,
+          color: ringColors[ringIndex % ringColors.length]
+        });
 
-    let lastNodeId = centerNodeId;
+        links.push({
+          source: lastNodeId,
+          target: thisNodeId,
+          radialIndex: index
+        });
 
-    proj.impacts.forEach(impact => {
-      const ringIndex = impactRingMap[impact];
-      const radius = baseRadius + ringIndex * ringSpacing;
-      const x = radius * Math.cos(angle);
-      const y = radius * Math.sin(angle);
+        lastNodeId = thisNodeId;
+      });
+    });
 
-      const thisNodeId = nodeId++;
-      nodes.push({
-        id: thisNodeId,
-        fx: x,
-        fy: y,
-        radialIndex: i,
-        impact,
-        category: proj.category,
-        project: name,
-        color: ringColors[ringIndex % ringColors.length],
-        size: 6
+    const gData = { nodes, links };
+    const Graph = ForceGraph()(document.getElementById('graph'))
+      .graphData(gData)
+      .enableNodeDrag(false)
+      .linkDirectionalParticles(0)
+      .linkWidth(() => 1)
+      .linkColor(() => '#999')
+      .nodeCanvasObject((node, ctx) => {
+        if (node.id === centerNodeId) return;
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
+        ctx.fillStyle = node.color;
+        ctx.fill();
+      })
+      .onRenderFrame(() => {
+        // Draw impact rings on every frame (so they stay visible)
+        const ctx = Graph.canvas().getContext('2d');
+        ctx.clearRect(0, 0, Graph.width(), Graph.height());
+
+        // Re-render the rings after each filter change
+        for (const impact of Object.keys(impactRingMap)) {
+          const ringIndex = impactRingMap[impact];
+          const radius = baseRadius + ringIndex * ringSpacing;
+          ctx.beginPath();
+          ctx.arc(0, 0, radius, 0, Math.PI * 2);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = ringColors[ringIndex % ringColors.length];
+          ctx.stroke();
+        }
       });
 
-      links.push({
-        source: lastNodeId,
-        target: thisNodeId,
-        radialIndex: i,
-        project: name,
-        category: proj.category,
-        impact
+    // Filters UI
+    const allCategories = [...new Set(entities.flatMap(e => e.categories))];
+    const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
+
+    function createCheckbox(filterType, value) {
+      const label = document.createElement('label');
+      label.style.display = 'block';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = value;
+      checkbox.name = filterType;
+      checkbox.onchange = applyFilters;
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(' ' + value));
+      return label;
+    }
+
+    const categoryDiv = document.getElementById('categoryFilters');
+    allCategories.forEach(cat => categoryDiv.appendChild(createCheckbox('category', cat)));
+
+    const impactDiv = document.getElementById('impactFilters');
+    allImpacts.forEach(imp => impactDiv.appendChild(createCheckbox('impact', imp)));
+
+    function getCheckedFilters(name) {
+      return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(cb => cb.value);
+    }
+
+    function applyFilters() {
+      const selectedCategories = getCheckedFilters('category');
+      const selectedImpacts = getCheckedFilters('impact');
+
+      const radialToInclude = new Set();
+
+      nodes.forEach(n => {
+        if (!n.name) return;
+        const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
+        const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
+        if (catMatch && impMatch) {
+          radialToInclude.add(n.radialIndex);
+        }
       });
 
-      lastNodeId = thisNodeId;
-    });
-  });
+      const filteredNodes = nodes.filter(n =>
+        n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
+      );
 
-  const gData = { nodes, links };
-  let activeRadial = null;
+      const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
 
-  const Graph = ForceGraph()(document.getElementById('graph'))
-    .graphData(gData)
-    .enableNodeDrag(false)
-    .onEngineTick(() => Graph.pauseAnimation())
-    .linkWidth(link => (link.radialIndex === activeRadial ? 2 : 1))
-    .linkColor(link => (link.radialIndex === activeRadial ? '#222' : '#aaa'))
-    .onNodeHover(node => {
-      activeRadial = node ? node.radialIndex : null;
-      Graph.graphData(filteredGraphData());
-    })
-    .nodeCanvasObject((node, ctx, globalScale) => {
-      if (node.id === centerNodeId) return;
-      const isHighlighted = node.radialIndex === activeRadial;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI);
-      ctx.fillStyle = node.color;
-      ctx.globalAlpha = isHighlighted || activeRadial === null ? 1 : 0.1;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    });
+      const filteredLinks = links
+        .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
+        .map(link => ({
+          source: nodeMap.get(link.source.id ?? link.source),
+          target: nodeMap.get(link.target.id ?? link.target),
+          radialIndex: link.radialIndex
+        }));
 
-  // Draw static impact rings
-  const ringCanvas = document.getElementById('impactRingsCanvas');
-  const ringCtx = ringCanvas.getContext('2d');
-
-  function drawImpactRings() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    ringCanvas.width = width;
-    ringCanvas.height = height;
-    ringCtx.clearRect(0, 0, width, height);
-    ringCtx.translate(width / 2, height / 2);
-
-    Object.entries(impactRingMap).forEach(([impact, ringIndex]) => {
-      const radius = baseRadius + ringIndex * ringSpacing;
-      ringCtx.beginPath();
-      ringCtx.arc(0, 0, radius, 0, 2 * Math.PI);
-      ringCtx.lineWidth = 1.5;
-      ringCtx.strokeStyle = ringColors[ringIndex % ringColors.length];
-      ringCtx.stroke();
-    });
-
-    ringCtx.setTransform(1, 0, 0, 1, 0, 0);
-  }
-
-  window.addEventListener('resize', drawImpactRings);
-  drawImpactRings();
-
-  // Filters
-  const categories = [...new Set(projects.map(p => p.category))];
-  const impacts = Object.keys(impactRingMap);
-  const selectedCategories = new Set(categories);
-  const selectedImpacts = new Set(impacts);
-
-  function createCheckboxes(list, containerId, selectedSet) {
-    const container = document.getElementById(containerId);
-    list.forEach(label => {
-      const id = `${containerId}_${label.replace(/\W+/g, '')}`;
-      const box = document.createElement('input');
-      box.type = 'checkbox';
-      box.id = id;
-      box.checked = true;
-      box.onchange = () => {
-        if (box.checked) selectedSet.add(label);
-        else selectedSet.delete(label);
-        Graph.graphData(filteredGraphData());
-      };
-      const lbl = document.createElement('label');
-      lbl.htmlFor = id;
-      lbl.textContent = ' ' + label;
-      const div = document.createElement('div');
-      div.appendChild(box);
-      div.appendChild(lbl);
-      container.appendChild(div);
-    });
-  }
-
-  function filteredGraphData() {
-    const filteredNodes = nodes.filter(
-      n => n.id === centerNodeId ||
-      (selectedCategories.has(n.category) && n.impact && selectedImpacts.has(n.impact))
-    );
-    const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
-    const filteredLinks = links.filter(
-      l => filteredNodeIds.has(l.source) && filteredNodeIds.has(l.target)
-    );
-    return { nodes: filteredNodes, links: filteredLinks };
-  }
-
-  createCheckboxes(categories, 'categoryFilters', selectedCategories);
-  createCheckboxes(impacts, 'impactFilters', selectedImpacts);
-</script>
-
+      Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
+    }
+  </script>
 </body>
 </html>
