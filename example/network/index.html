@@ -104,24 +104,28 @@
     .linkDirectionalParticles(0)
     .linkWidth(() => 2)
     .linkColor(() => '#aaa')
-    .nodeCanvasObject((node, ctx) => {
-     if (node.id === centerNodeId) {
-          // Draw rings
-      ctx.save();
-      ctx.strokeStyle = '#ddd';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < maxLayers; i++) {
-        ctx.beginPath();
-        ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
-        ctx.stroke();
-      }
-      ctx.restore();
-      return;
-
-      ctx.fillStyle = node.color;
-      ctx.fill();
+    .nodeCanvasObject((node, ctx, globalScale) => {
+      if (node.id === centerNodeId) {
+    // Draw concentric rings around center
+        ctx.save();
+    ctx.translate(node.x, node.y); // Needed to draw arcs at the center node's position
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < maxLayers; i++) {
+      ctx.beginPath();
+      ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+      ctx.stroke();
     }
-  });
+    ctx.restore();
+  } else {
+    // Draw normal node
+    const size = node.size || 4;
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
+    ctx.fillStyle = node.color || '#666';
+    ctx.fill();
+  }
+});
 
     // Filters UI
     const allCategories = [...new Set(entities.flatMap(e => e.categories))];
