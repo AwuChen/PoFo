@@ -36,11 +36,6 @@
 </head>
 
 <body>
-  <div id="controls">
-    <button onclick="setState(1)">State 1: Lines Only</button>
-    <button onclick="setState(2)">State 2: Grid Only</button>
-    <button onclick="setState(3)">State 3: + Nodes</button>
-  </div>
 
   <div id="legend">
     <h4>PORTFOLIO & CATEGORIES</h4>
@@ -62,7 +57,7 @@
       { name: 'EASTERN SEAS', category: 'Forces', impact: 'Strategy.Culture' },
       { name: 'DANDELION', category: 'Consultancies', impact: 'Edu.Learning.Collective' },
       { name: 'BILI Q', category: 'Cities.culture.art', impact: 'Creative Solution' },
-      { name: 'KYOTO ART BANK', category: 'Ecosystems', impact: 'Edu.Learning.Collective', 'Strategy.Culture', 'Branding'},
+      { name: 'KYOTO ART BANK', category: 'Ecosystems', impact: 'Edu.Learning.Collective'},
       { name: 'ARAMIS WINES', category: 'Yesteryears', impact: 'Branding' }
     ];
 
@@ -267,7 +262,7 @@
 
     buildLegend();
     buildImpactLegend();
-    setState(1);
+    setState(3);
   </script>
 </body>
 </html>
