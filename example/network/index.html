@@ -127,109 +127,115 @@
 
         lastNodeId = thisNodeId;
       });
-    });
 
-    const gData = { nodes, links };
-    const Graph = ForceGraph()(document.getElementById('graph'))
-    .graphData(gData)
-    .enableNodeDrag(false)
-    .linkDirectionalParticles(0)
-    .linkWidth(() => 0.5)
-    .linkColor(() => '#aaa')
-    .linkPositionUpdate((link) => {
-      const source = nodes.find(n => n.id === link.source);
-      const target = nodes.find(n => n.id === link.target);
+// Add invisible tip node
+const tipRadius = baseRadius + (maxLayers) * ringSpacing + 10; // Extend slightly past outermost ring
+const tipX = tipRadius * Math.cos(angle);
+const tipY = tipRadius * Math.sin(angle);
+const tipNodeId = nodeId++;
+nodes.push({
+  id: tipNodeId,
+  fx: tipX,
+  fy: tipY,
+  radialIndex: index,
+  size: 0.01, // Essentially invisible
+  color: 'rgba(0,0,0,0)' // Fully transparent
+});
+links.push({
+  source: lastNodeId,
+  target: tipNodeId,
+  radialIndex: index
+});
 
-      if (!source || !target || link.source === centerNodeId) return;
 
-      const dx = target.x - source.x;
-      const dy = target.y - source.y;
-      const length = Math.sqrt(dx * dx + dy * dy);
-
-      const extendRatio = 1.2;
-      target.x = source.x + dx * extendRatio;
-      target.y = source.y + dy * extendRatio;
-    })
-    .nodeCanvasObject((node, ctx, globalScale) => {
-      if (node.id === centerNodeId) {
-        ctx.save();
-        ctx.translate(node.x, node.y);
-        ctx.strokeStyle = '#ddd';
-        ctx.lineWidth = 1;
-        for (let i = 0; i < maxLayers; i++) {
-          ctx.beginPath();
-          ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
-          ctx.stroke();
-        }
-        ctx.restore();
-      } else {
-        const size = node.size || 4;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
-        ctx.fillStyle = node.color || '#666';
-        ctx.fill();
-      }
-    });
-
+const gData = { nodes, links };
+const Graph = ForceGraph()(document.getElementById('graph'))
+.graphData(gData)
+.enableNodeDrag(false)
+.linkDirectionalParticles(0)
+.linkWidth(() => 0.5)
+.linkColor(() => '#000000')
+.nodeCanvasObject((node, ctx, globalScale) => {
+  if (node.id === centerNodeId) {
+    // Draw concentric rings around center
+    ctx.save();
+    ctx.translate(node.x, node.y); // Needed to draw arcs at the center node's position
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < maxLayers; i++) {
+      ctx.beginPath();
+      ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else {
+    // Draw normal node
+    const size = node.size || 4;
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
+    ctx.fillStyle = node.color || '#666';
+    ctx.fill();
+  }
+});
 
     // Filters UI
-    const allCategories = [...new Set(entities.flatMap(e => e.categories))];
-    const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
+const allCategories = [...new Set(entities.flatMap(e => e.categories))];
+const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
 
-    function createCheckbox(filterType, value) {
-      const label = document.createElement('label');
-      label.style.display = 'block';
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.value = value;
-      checkbox.name = filterType;
-      checkbox.onchange = applyFilters;
-      label.appendChild(checkbox);
-      label.appendChild(document.createTextNode(' ' + value));
-      return label;
+function createCheckbox(filterType, value) {
+  const label = document.createElement('label');
+  label.style.display = 'block';
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.value = value;
+  checkbox.name = filterType;
+  checkbox.onchange = applyFilters;
+  label.appendChild(checkbox);
+  label.appendChild(document.createTextNode(' ' + value));
+  return label;
+}
+
+const categoryDiv = document.getElementById('categoryFilters');
+allCategories.forEach(cat => categoryDiv.appendChild(createCheckbox('category', cat)));
+
+const impactDiv = document.getElementById('impactFilters');
+allImpacts.forEach(imp => impactDiv.appendChild(createCheckbox('impact', imp)));
+
+function getCheckedFilters(name) {
+  return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(cb => cb.value);
+}
+
+function applyFilters() {
+  const selectedCategories = getCheckedFilters('category');
+  const selectedImpacts = getCheckedFilters('impact');
+
+  const radialToInclude = new Set();
+
+  nodes.forEach(n => {
+    if (!n.name) return;
+    const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
+    const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
+    if (catMatch && impMatch) {
+      radialToInclude.add(n.radialIndex);
     }
+  });
 
-    const categoryDiv = document.getElementById('categoryFilters');
-    allCategories.forEach(cat => categoryDiv.appendChild(createCheckbox('category', cat)));
+  const filteredNodes = nodes.filter(n =>
+    n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
+    );
 
-    const impactDiv = document.getElementById('impactFilters');
-    allImpacts.forEach(imp => impactDiv.appendChild(createCheckbox('impact', imp)));
+  const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
 
-    function getCheckedFilters(name) {
-      return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(cb => cb.value);
-    }
+  const filteredLinks = links
+  .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
+  .map(link => ({
+    source: nodeMap.get(link.source.id ?? link.source),
+    target: nodeMap.get(link.target.id ?? link.target),
+    radialIndex: link.radialIndex
+  }));
 
-    function applyFilters() {
-      const selectedCategories = getCheckedFilters('category');
-      const selectedImpacts = getCheckedFilters('impact');
-
-      const radialToInclude = new Set();
-
-      nodes.forEach(n => {
-        if (!n.name) return;
-        const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
-        const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
-        if (catMatch && impMatch) {
-          radialToInclude.add(n.radialIndex);
-        }
-      });
-
-      const filteredNodes = nodes.filter(n =>
-        n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
-        );
-
-      const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
-
-      const filteredLinks = links
-      .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
-      .map(link => ({
-        source: nodeMap.get(link.source.id ?? link.source),
-        target: nodeMap.get(link.target.id ?? link.target),
-        radialIndex: link.radialIndex
-      }));
-
-      Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
-    }
-  </script>
+  Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
+}
+</script>
 </body>
 </html>
