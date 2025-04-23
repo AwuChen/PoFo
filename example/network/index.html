@@ -134,8 +134,8 @@
     .graphData(gData)
     .enableNodeDrag(false)
     .linkDirectionalParticles(0)
-    .linkWidth(() => 2)
-    .linkColor(() => '#aaa')
+    .linkWidth(() => 0.5)
+    .linkColor(() => '#000000')
     .nodeCanvasObject((node, ctx, globalScale) => {
       if (node.id === centerNodeId) {
     // Draw concentric rings around center
