@@ -281,7 +281,8 @@
       }));
 
       // Store the camera state
-      let cameraState = Graph.camera();
+      const zoom = Graph.zoom();
+      const { x, y } = Graph.cameraPosition();
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
 
@@ -331,7 +332,8 @@
       }  
 
       // Restore the camera state
-      Graph.camera(cameraState);
+      Graph.zoom(zoom);
+      Graph.centerAt(x, y, 0);
     }
     function showEntityList(category, clickedElement, event) {
       const matchingEntities = entities.filter(e => e.categories.includes(category));
