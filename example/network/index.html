@@ -1,250 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Concentric ForceGraph</title>
   <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; position: absolute; top: 0; left: 0; z-index: 0; }
-    #controls {
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    #filter-container {
       position: absolute;
       top: 10px;
       left: 10px;
       z-index: 10;
-      background: rgba(255,255,255,0.95);
+      background: rgba(255, 255, 255, 0.9);
       padding: 10px;
       border-radius: 8px;
       font-family: sans-serif;
-      max-height: 90vh;
-      overflow-y: auto;
     }
-    #controls h3 {
-      margin-top: 10px;
+    .filter-group {
+      margin-bottom: 10px;
+    }
+    .filter-group label {
+      font-weight: bold;
+      display: block;
       margin-bottom: 5px;
     }
-    .filter-item {
-      font-size: 16px;
-      margin: 4px 0;
-      cursor: pointer;
-      color: #999;
-      font-weight: bold;
-      transition: color 0.2s;
-    }
-
-    .filter-item.active {
-      color: #000;
-      padding: 2px 6px;
+    .filter-group div {
+      margin-left: 10px;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
 </head>
 <body>
-  <div id="controls">
-    <h3>PORTFOLIO & CATEGORIES</h3>
-    <div id="categoryFilters"></div>
-    <h3>APPROACH & IMPACT</h3>
-    <div id="impactFilters"></div>
-  </div>
-  <div id="graph"></div>
+  <div id="filter-container"></div>
+  <div id="3d-graph"></div>
 
+  <script src="https://unpkg.com/3d-force-graph"></script>
   <script>
     const entities = [
-      { name: 'URF / TX The BOX', categories: ['Investment'], impacts: ['Retail'] },
-      { name: 'SAUVEREIGN', categories: ['Investment'], impacts: ['Branding', 'Retail'] },
-      { name: 'DONGHAI', categories: ['Investment'], impacts: ['East.West', 'Strategy.Culture'] },
-      { name: 'EASTERN SEAS', categories: ['Investment'], impacts: ['Creative Solution'] },
-      { name: 'DANDELION', categories: ['Investment'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
-      { name: 'BILI Q', categories: ['Investment'], impacts: ['East.West'] },
-      { name: 'KYOTO ART BANK', categories: ['Investment'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'ARAMIS WINES', categories: ['Investment'], impacts: ['Branding'] },
-      { name: 'SEIICHI MIZUNO', categories: ['Forces'], impacts: ['Retail'] },
-      { name: 'MARIO TESTINO', categories: ['Forces'], impacts: ['Branding', 'Retail'] },
-      { name: 'JUDY DOBIAS', categories: ['Forces'], impacts: ['East.West', 'Strategy.Culture'] },
-      { name: 'THE CROSSES', categories: ['Forces'], impacts: ['Creative Solution'] },
-      { name: 'SUNTCHI', categories: ['Forces'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
-      { name: 'SHANGHAI INDUSTRIAL MUSEUM', categories: ['Consultancies'], impacts: ['East.West'] },
-      { name: 'HONG KONG JOCKEY CLUB', categories: ['Consultancies'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'MOLESKINE', categories: ['Consultancies'], impacts: ['Branding'] },
-      { name: 'LUXEMBOURG IN CHINA', categories: ['Cities.culture.art'], impacts: ['Retail'] },
-      { name: 'TONGJI UNIVERSITY', categories: ['Cities.culture.art'], impacts: ['Branding', 'Retail'] },
-      { name: 'UNIVERSITY COLLABORATIONS', categories: ['Cities.culture.art'], impacts: ['East.West', 'Strategy.Culture'] },
-      { name: 'CONFUCIUS SECONDARY SCHOOL', categories: ['Cities.culture.art'], impacts: ['Creative Solution'] },
-      { name: 'DANISH DESIGN AWARD', categories: ['Cities.culture.art'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
-      { name: 'WORLD DESIGN CAPITAL', categories: ['Cities.culture.art'], impacts: ['East.West'] },
-      { name: 'BANGKOK INTL DESIGN EXPO', categories: ['Cities.culture.art'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'PENANG INSTITUTE', categories: ['Cities.culture.art'], impacts: ['Branding'] },
-      { name: 'YUAN MUSEUM', categories: ['Cities.culture.art'], impacts: ['East.West'] },
-      { name: 'PALACE MUSEUM', categories: ['Cities.culture.art'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'ZENG FANZHI', categories: ['Cities.culture.art'], impacts: ['Branding'] },
-      { name: 'TED / TEDX', categories: ['Ecosystems'], impacts: ['East.West'] },
-      { name: 'BURNING MAN', categories: ['Ecosystems'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'PAN ASIA NETWORK', categories: ['Ecosystems'], impacts: ['Branding'] },
-      { name: 'SHANGHAI INDUSTRIAL MUSEUM', categories: ['Ecosystems'], impacts: ['East.West'] },
-      { name: 'EARTH ONE', categories: ['Ecosystems'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'ALTER PROJECTS', categories: ['Ecosystems'], impacts: ['Branding'] },
-      { name: 'ASIA-EUROPE BRIDGE', categories: ['Ecosystems'], impacts: ['Branding'] },
-      { name: 'BLOOMINGDALES NEW YORK', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'THE NEW YORK TIMES', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'URBAN ARCH BI-CITY BIENNALE', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'ISETAN', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'BENETTON', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'SOTHEBYS AUCTION HOUSE, INTL REALTY', categories: ['Yesteryears'], impacts: ['Branding'] }
+      { id: 1, name: 'URF / TX THE BOX', category: 'Forces', impact: 'High' },
+      { id: 2, name: 'ART BANK', category: 'Investment', impact: 'Medium' },
+      { id: 3, name: 'DONGHAI / EASTERN SEAS', category: 'Diplomacy', impact: 'Low' },
+      { id: 4, name: 'MIND COUNCIL', category: 'Forces', impact: 'Medium' },
+      { id: 5, name: 'QUANTUM COVE', category: 'Investment', impact: 'High' },
+      { id: 6, name: 'NEON NODE', category: 'Diplomacy', impact: 'Low' }
+    ];
+
+    const links = [
+      { source: 1, target: 2 },
+      { source: 2, target: 3 },
+      { source: 3, target: 4 },
+      { source: 4, target: 5 },
+      { source: 5, target: 6 },
+      { source: 6, target: 1 }
     ];
 
     const impactRingMap = {
-      'Strategy.Culture': 0,
-      'Branding': 1,
-      'Retail': 2,
-      'East.West': 3,
-      'Edu.Learning.Collective': 4,
-      'Creative Solution': 5
+      'Low': 200,
+      'Medium': 300,
+      'High': 400
     };
 
-    const ringSpacing = 80;
-    const baseRadius = 100;
-    const ringColors = ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b', '#8ecae6'];
-    const maxLayers = 6;
+    const categoryHierarchy = {
+      'Forces': ['URF / TX THE BOX', 'MIND COUNCIL'],
+      'Investment': ['ART BANK', 'QUANTUM COVE'],
+      'Diplomacy': ['DONGHAI / EASTERN SEAS', 'NEON NODE']
+    };
 
-    let nodeId = 0;
-    const nodes = [], links = [];
+    const centerNode = { id: 0, name: 'CENTER', category: 'Core', impact: 'High' };
 
-    const centerNodeId = nodeId++;
-    nodes.push({ id: centerNodeId, fx: 0, fy: 0, size: 4, color: '#000000' });
-
-    entities.forEach((entity, index) => {
-      const angle = (2 * Math.PI * index) / entities.length;
-      let lastNodeId = centerNodeId;
-
-      entity.impacts.forEach(impact => {
-        const ringIndex = impactRingMap[impact] ?? 0;
-        const radius = baseRadius + ringIndex * ringSpacing;
-        const x = radius * Math.cos(angle);
-        const y = radius * Math.sin(angle);
-
-        const thisNodeId = nodeId++;
-        nodes.push({
-          id: thisNodeId,
-          fx: x,
-          fy: y,
-          name: entity.name,
-          categories: entity.categories,
-          impact: impact,
-          radialIndex: index,
-          size: 6,
-          color: ringColors[ringIndex % ringColors.length]
-        });
-
-        links.push({
-          source: lastNodeId,
-          target: thisNodeId,
-          radialIndex: index
-        });
-
-        lastNodeId = thisNodeId;
+    const Graph = ForceGraph()(document.getElementById('3d-graph'))
+      .nodeId('id')
+      .nodeLabel('name')
+      .nodeAutoColorBy('category')
+      .linkDirectionalParticles(2)
+      .linkDirectionalParticleWidth(2)
+      .onEngineTick(() => {
+        Graph.zoomToFit(400);
       });
-    });
 
-    const gData = { nodes, links };
-    const Graph = ForceGraph()(document.getElementById('graph'))
-    .graphData(gData)
-    .enableNodeDrag(false)
-    .linkDirectionalParticles(0)
-    .linkWidth(() => 0.5)
-    .linkColor(() => '#000000')
-    .nodeCanvasObject((node, ctx, globalScale) => {
-      if (node.id === centerNodeId) {
-    // Draw concentric rings around center
-        ctx.save();
-    ctx.translate(node.x, node.y); // Needed to draw arcs at the center node's position
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < maxLayers; i++) {
-      ctx.beginPath();
-      ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
-      ctx.stroke();
-    }
-    ctx.restore();
-  } else {
-    // Draw normal node
-    const size = node.size || 4;
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
-    ctx.fillStyle = node.color || '#666';
-    ctx.fill();
-  }
-});
-
-    // Filters UI
-    const allCategories = [...new Set(entities.flatMap(e => e.categories))];
-    const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
-
-    function createCheckbox(filterType, value) {
-      const label = document.createElement('label');
-      label.style.display = 'block';
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.value = value;
-      checkbox.name = filterType;
-      checkbox.onchange = applyFilters;
-      label.appendChild(checkbox);
-      label.appendChild(document.createTextNode(' ' + value));
-      return label;
-    }
-
-    function createFilterList(containerId, filterType, values) {
-      const container = document.getElementById(containerId);
-      values.forEach(value => {
-        const item = document.createElement('div');
-        item.className = 'filter-item';
-        item.textContent = value;
-        item.dataset.type = filterType;
-        item.dataset.value = value;
-        item.onclick = () => {
-          item.classList.toggle('active');
-          applyFilters();
-        };
-        container.appendChild(item);
-      });
-    }
-
-    createFilterList('categoryFilters', 'category', allCategories);
-    createFilterList('impactFilters', 'impact', allImpacts);
-
-
-    function getActiveFilters(type) {
-      return [...document.querySelectorAll(`.filter-item.active[data-type="${type}"]`)]
-      .map(el => el.dataset.value);
+    function polarToCartesian(radius, angleInDegrees) {
+      const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+      return {
+        x: radius * Math.cos(angleInRadians),
+        y: radius * Math.sin(angleInRadians)
+      };
     }
 
     function applyFilters() {
-      const selectedCategories = getActiveFilters('category');
-      const selectedImpacts = getActiveFilters('impact');
+      const checkedFilters = Array.from(document.querySelectorAll('.filter-item:checked')).map(cb => cb.value);
+      const checkedSubFilters = Array.from(document.querySelectorAll('.subfilter-item:checked')).map(cb => cb.value);
 
-      const radialToInclude = new Set();
+      const filteredNodes = entities
+        .filter(d => checkedFilters.includes(d.category))
+        .filter(d => checkedSubFilters.includes(d.name))
+        .map((node, idx, arr) => {
+          const nodesInSameRing = arr.filter(n => n.impact === node.impact);
+          const angle = 360 * nodesInSameRing.findIndex(n => n.id === node.id) / nodesInSameRing.length;
+          const { x, y } = polarToCartesian(impactRingMap[node.impact], angle);
+          return { ...node, fx: x, fy: y };
+        });
 
-      nodes.forEach(n => {
-        if (!n.name) return;
-        const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
-        const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
-        if (catMatch && impMatch) {
-          radialToInclude.add(n.radialIndex);
-        }
+      const nodeIds = new Set(filteredNodes.map(n => n.id));
+      const filteredLinks = links.filter(l => nodeIds.has(l.source) && nodeIds.has(l.target));
+
+      Graph.graphData({
+        nodes: [centerNode, ...filteredNodes],
+        links: filteredLinks
       });
-
-      const filteredNodes = nodes.filter(n =>
-        n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
-        );
-
-      const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
-
-      const filteredLinks = links
-      .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
-      .map(link => ({
-        source: nodeMap.get(link.source.id ?? link.source),
-        target: nodeMap.get(link.target.id ?? link.target),
-        radialIndex: link.radialIndex
-      }));
-
-      Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
     }
+
+    function createFilterUI() {
+      const container = document.getElementById('filter-container');
+      container.innerHTML = '';
+
+      Object.entries(categoryHierarchy).forEach(([category, names]) => {
+        const group = document.createElement('div');
+        group.className = 'filter-group';
+
+        const label = document.createElement('label');
+        label.textContent = category;
+        group.appendChild(label);
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'filter-item';
+        checkbox.value = category;
+        checkbox.checked = true;
+        checkbox.addEventListener('change', applyFilters);
+        group.appendChild(checkbox);
+
+        const subGroup = document.createElement('div');
+        names.forEach(name => {
+          const subLabel = document.createElement('label');
+          const subCheckbox = document.createElement('input');
+          subCheckbox.type = 'checkbox';
+          subCheckbox.className = 'subfilter-item';
+          subCheckbox.value = name;
+          subCheckbox.checked = true;
+          subCheckbox.addEventListener('change', applyFilters);
+          subLabel.appendChild(subCheckbox);
+          subLabel.appendChild(document.createTextNode(name));
+          subGroup.appendChild(subLabel);
+        });
+
+        group.appendChild(subGroup);
+        container.appendChild(group);
+      });
+    }
+
+    // INIT
+    createFilterUI();
+    applyFilters();
   </script>
 </body>
 </html>
