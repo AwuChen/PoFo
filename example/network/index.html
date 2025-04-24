@@ -268,7 +268,29 @@
           item.style.fontSize = '14px';
           item.style.color = '#333';
           item.onclick = () => {
-            alert(`You clicked on ${name}`); // Replace with your desired action
+            const selectedEntity = name;
+            const entityRadialIndex = nodes.find(n => n.name === selectedEntity)?.radialIndex;
+
+            if (entityRadialIndex === undefined) return;
+
+            const filteredNodes = nodes.filter(n =>
+              n.id === centerNodeId || n.radialIndex === entityRadialIndex
+              );
+
+            const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
+
+            const filteredLinks = links
+            .filter(link =>
+              nodeMap.has(link.source.id ?? link.source) &&
+              nodeMap.has(link.target.id ?? link.target)
+              )
+            .map(link => ({
+              source: nodeMap.get(link.source.id ?? link.source),
+              target: nodeMap.get(link.target.id ?? link.target),
+              radialIndex: link.radialIndex
+            }));
+
+            Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
           };
           entityListContainer.appendChild(item);
         });
