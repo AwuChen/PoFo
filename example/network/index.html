@@ -35,12 +35,10 @@
     }
     #entityList {
       position: absolute;
-      background: rgba(255, 255, 255, 0.95);
       padding: 10px;
       border-radius: 8px;
       font-family: sans-serif;
       z-index: 11;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
       max-height: 90vh;
       overflow-y: auto;
       display: none; /* hidden by default */
@@ -221,14 +219,22 @@
         item.dataset.type = filterType;
         item.dataset.value = value;
         item.onclick = (e) => {
-          item.classList.toggle('active');
-          applyFilters();
+          const allCategoryItems = document.querySelectorAll('.filter-item[data-type="category"]');
+          const isActive = item.classList.contains('active');
 
-          if (item.classList.contains('active')) {
-            showEntityList(item.dataset.value, item, e); // show list if active
+          // Clear all active classes
+          allCategoryItems.forEach(el => el.classList.remove('active'));
+
+          if (!isActive) {
+            // Only activate if it wasn't already active
+            item.classList.add('active');
+            showEntityList(item.dataset.value, item, e);
           } else {
-            hideEntityList(); // hide list if deselected
+            // If it was active, we just deactivated it, so hide the list
+            hideEntityList();
           }
+
+          applyFilters();
         };
         container.appendChild(item);
       });
