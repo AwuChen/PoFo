@@ -120,12 +120,18 @@
         const y = radius * Math.sin(angle);
 
         const thisNodeId = nodeId++;
+
+        const flattenedCategories = entity.categories.flatMap(cat =>
+          [cat.name, ...(cat.subcategories || [])]
+          );
+
         nodes.push({
           id: thisNodeId,
           fx: x,
           fy: y,
           name: entity.name,
-          categories: entity.categories,
+          categories: entity.categories, // original format, still useful
+          flattenedCategories,           // for filtering
           impact: impact,
           radialIndex: index,
           size: 6,
@@ -280,9 +286,10 @@
         if (!n.name) return;
 
         const nameMatch = selectedEntities.length === 0 || selectedEntities.includes(n.name);
-        const categoryMatch = selectedCategories.length === 0 ||
-          (Array.isArray(n.categories) && n.categories.some(cat => selectedCategories.includes(cat)));
-        const impactMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
+        const categoryMatch =
+        selectedCategories.length === 0 ||
+        (n.flattenedCategories &&
+          n.flattenedCategories.some(cat => selectedCategories.includes(cat)));
 
         if ((nameMatch || categoryMatch) && impactMatch) {
           radialToInclude.add(n.radialIndex);
