@@ -219,6 +219,8 @@
       Object.entries(categoryMap).forEach(([cat, entityNames]) => {
         const categoryHeader = document.createElement('div');
         categoryHeader.className = 'filter-item';
+        categoryHeader.dataset.type = 'category';
+        categoryHeader.dataset.value = cat;
         categoryHeader.textContent = cat;
 
         const entityList = document.createElement('div');  // move this up!
@@ -268,16 +270,20 @@
     }
 
     function applyFilters() {
-      const selectedEntities = getActiveEntityNames();
+      const selectedCategories = getActiveFilters('category');
+      const selectedEntities = getActiveFilters('entity');
       const selectedImpacts = getActiveFilters('impact');
 
       const radialToInclude = new Set();
 
       nodes.forEach(n => {
         if (!n.name) return;
+
         const nameMatch = selectedEntities.length === 0 || selectedEntities.includes(n.name);
-        const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
-        if (nameMatch && impMatch) {
+        const categoryMatch = selectedCategories.length === 0 || n.categories.some(cat => selectedCategories.includes(cat));
+        const impactMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
+
+        if ((nameMatch || categoryMatch) && impactMatch) {
           radialToInclude.add(n.radialIndex);
         }
       });
