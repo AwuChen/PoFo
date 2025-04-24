@@ -163,37 +163,37 @@
     const gData = { nodes, links };
     const Graph = ForceGraph()(document.getElementById('graph'))
     .graphData(gData)
-    .onEngineStop(() => {
-      const initialZoom = Graph.zoom() * 0.8;
-      Graph.zoom(initialZoom);
-      Graph.centerAt(0, 0, 0);
-    })
     .enableNodeDrag(false)
     .linkDirectionalParticles(0)
     .linkWidth(() => 0.5)
     .linkColor(() => '#000000')
     .nodeCanvasObject((node, ctx, globalScale) => {
-      if (node.id === centerNodeId) {
-    // Draw concentric rings around center
-        ctx.save();
-    ctx.translate(node.x, node.y); // Needed to draw arcs at the center node's position
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < maxLayers; i++) {
-      ctx.beginPath();
-      ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
-      ctx.stroke();
+          if (node.id === centerNodeId) {
+        // Draw concentric rings around center
+            ctx.save();
+        ctx.translate(node.x, node.y); // Needed to draw arcs at the center node's position
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < maxLayers; i++) {
+          ctx.beginPath();
+          ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else {
+        // Draw normal node
+        const size = node.size || 4;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
+        ctx.fillStyle = node.color || '#666';
+        ctx.fill();
+      }
     }
-    ctx.restore();
-  } else {
-    // Draw normal node
-    const size = node.size || 4;
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
-    ctx.fillStyle = node.color || '#666';
-    ctx.fill();
-  }
-});
+    .onEngineStop(() => {
+      const initialZoom = Graph.zoom() * 0.5;
+      Graph.zoom(initialZoom);
+      Graph.centerAt(0, 0, 0);
+    }));
 
     // Filters UI
     const allCategories = [...new Set(entities.flatMap(e => e.categories))];
