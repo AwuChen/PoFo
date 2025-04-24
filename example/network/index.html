@@ -262,6 +262,11 @@
       .map(el => el.dataset.value);
     }
 
+    function getActiveFilters(type) {
+      return [...document.querySelectorAll(`.filter-item.active[data-type="${type}"]`)]
+      .map(el => el.dataset.value);
+    }
+
     function applyFilters() {
       const selectedEntities = getActiveEntityNames();
       const selectedImpacts = getActiveFilters('impact');
