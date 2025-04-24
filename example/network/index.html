@@ -223,7 +223,12 @@
         item.onclick = (e) => {
           item.classList.toggle('active');
           applyFilters();
-          showEntityList(item.dataset.value, item, e); // Pass the item and click event
+
+          if (item.classList.contains('active')) {
+            showEntityList(item.dataset.value, item, e); // show list if active
+          } else {
+            hideEntityList(); // hide list if deselected
+          }
         };
         container.appendChild(item);
       });
@@ -333,6 +338,11 @@
       entityListEl.style.left = `${rect.right + 10}px`;
       entityListEl.style.top = `${rect.top + window.scrollY}px`;
       entityListEl.style.display = 'block';
+    }
+
+    function hideEntityList() {
+      const entityListEl = document.getElementById('entityList');
+      entityListEl.style.display = 'none';
     }
 
     function filterToEntity(name) {
