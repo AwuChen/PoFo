@@ -62,115 +62,132 @@
   </div>
   <div id="entityList"></div>
   <div id="graph"></div>
+  <div id="infoPopup" style="
+  position: absolute;
+  top: 100px;
+  right: 20px;
+  background: white;
+  border: 1px solid #ccc;
+  padding: 12px;
+  border-radius: 8px;
+  font-family: sans-serif;
+  display: none;
+  z-index: 20;
+  max-width: 300px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  ">
+  <strong id="popupName"></strong><br>
+  <span id="popupCategory"></span><br>
+  <span id="popupImpact"></span>
+</div>
+<script>
+  const entities = [
+    { name: 'URF / TX The BOX', categories: ['Investment'], impacts: ['Retail'] },
+    { name: 'SAUVEREIGN', categories: ['Investment'], impacts: ['Branding', 'Retail'] },
+    { name: 'DONGHAI', categories: ['Investment'], impacts: ['East.West', 'Strategy.Culture'] },
+    { name: 'EASTERN SEAS', categories: ['Investment'], impacts: ['Creative Solution'] },
+    { name: 'DANDELION', categories: ['Investment'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
+    { name: 'BILI Q', categories: ['Investment'], impacts: ['East.West'] },
+    { name: 'KYOTO ART BANK', categories: ['Investment'], impacts: ['Culture', 'Creative Solution'] },
+    { name: 'ARAMIS WINES', categories: ['Investment'], impacts: ['Branding'] },
+    { name: 'SEIICHI MIZUNO', categories: ['Forces'], impacts: ['Retail'] },
+    { name: 'MARIO TESTINO', categories: ['Forces'], impacts: ['Branding', 'Retail'] },
+    { name: 'JUDY DOBIAS', categories: ['Forces'], impacts: ['East.West', 'Strategy.Culture'] },
+    { name: 'THE CROSSES', categories: ['Forces'], impacts: ['Creative Solution'] },
+    { name: 'SUNTCHI', categories: ['Forces'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
+    { name: 'SHANGHAI INDUSTRIAL MUSEUM', categories: ['Consultancies'], impacts: ['East.West'] },
+    { name: 'HONG KONG JOCKEY CLUB', categories: ['Consultancies'], impacts: ['Culture', 'Creative Solution'] },
+    { name: 'MOLESKINE', categories: ['Consultancies'], impacts: ['Branding'] },
+    { name: 'LUXEMBOURG IN CHINA', categories: ['Cities.culture.art'], impacts: ['Retail'] },
+    { name: 'TONGJI UNIVERSITY', categories: ['Cities.culture.art'], impacts: ['Branding', 'Retail'] },
+    { name: 'UNIVERSITY COLLABORATIONS', categories: ['Cities.culture.art'], impacts: ['East.West', 'Strategy.Culture'] },
+    { name: 'CONFUCIUS SECONDARY SCHOOL', categories: ['Cities.culture.art'], impacts: ['Creative Solution'] },
+    { name: 'DANISH DESIGN AWARD', categories: ['Cities.culture.art'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
+    { name: 'WORLD DESIGN CAPITAL', categories: ['Cities.culture.art'], impacts: ['East.West'] },
+    { name: 'BANGKOK INTL DESIGN EXPO', categories: ['Cities.culture.art'], impacts: ['Culture', 'Creative Solution'] },
+    { name: 'PENANG INSTITUTE', categories: ['Cities.culture.art'], impacts: ['Branding'] },
+    { name: 'YUAN MUSEUM', categories: ['Cities.culture.art'], impacts: ['East.West'] },
+    { name: 'PALACE MUSEUM', categories: ['Cities.culture.art'], impacts: ['Culture', 'Creative Solution'] },
+    { name: 'ZENG FANZHI', categories: ['Cities.culture.art'], impacts: ['Branding'] },
+    { name: 'TED / TEDX', categories: ['Ecosystems'], impacts: ['East.West'] },
+    { name: 'BURNING MAN', categories: ['Ecosystems'], impacts: ['Culture', 'Creative Solution'] },
+    { name: 'PAN ASIA NETWORK', categories: ['Ecosystems'], impacts: ['Branding'] },
+    { name: 'SHANGHAI INDUSTRIAL MUSEUM', categories: ['Ecosystems'], impacts: ['East.West'] },
+    { name: 'EARTH ONE', categories: ['Ecosystems'], impacts: ['Culture', 'Creative Solution'] },
+    { name: 'ALTER PROJECTS', categories: ['Ecosystems'], impacts: ['Branding'] },
+    { name: 'ASIA-EUROPE BRIDGE', categories: ['Ecosystems'], impacts: ['Branding'] },
+    { name: 'BLOOMINGDALES NEW YORK', categories: ['Yesteryears'], impacts: ['Branding'] },
+    { name: 'THE NEW YORK TIMES', categories: ['Yesteryears'], impacts: ['Branding'] },
+    { name: 'URBAN ARCH BI-CITY BIENNALE', categories: ['Yesteryears'], impacts: ['Branding'] },
+    { name: 'ISETAN', categories: ['Yesteryears'], impacts: ['Branding'] },
+    { name: 'BENETTON', categories: ['Yesteryears'], impacts: ['Branding'] },
+    { name: 'SOTHEBYS AUCTION HOUSE, INTL REALTY', categories: ['Yesteryears'], impacts: ['Branding'] }
+  ];
 
-  <script>
-    const entities = [
-      { name: 'URF / TX The BOX', categories: ['Investment'], impacts: ['Retail'] },
-      { name: 'SAUVEREIGN', categories: ['Investment'], impacts: ['Branding', 'Retail'] },
-      { name: 'DONGHAI', categories: ['Investment'], impacts: ['East.West', 'Strategy.Culture'] },
-      { name: 'EASTERN SEAS', categories: ['Investment'], impacts: ['Creative Solution'] },
-      { name: 'DANDELION', categories: ['Investment'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
-      { name: 'BILI Q', categories: ['Investment'], impacts: ['East.West'] },
-      { name: 'KYOTO ART BANK', categories: ['Investment'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'ARAMIS WINES', categories: ['Investment'], impacts: ['Branding'] },
-      { name: 'SEIICHI MIZUNO', categories: ['Forces'], impacts: ['Retail'] },
-      { name: 'MARIO TESTINO', categories: ['Forces'], impacts: ['Branding', 'Retail'] },
-      { name: 'JUDY DOBIAS', categories: ['Forces'], impacts: ['East.West', 'Strategy.Culture'] },
-      { name: 'THE CROSSES', categories: ['Forces'], impacts: ['Creative Solution'] },
-      { name: 'SUNTCHI', categories: ['Forces'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
-      { name: 'SHANGHAI INDUSTRIAL MUSEUM', categories: ['Consultancies'], impacts: ['East.West'] },
-      { name: 'HONG KONG JOCKEY CLUB', categories: ['Consultancies'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'MOLESKINE', categories: ['Consultancies'], impacts: ['Branding'] },
-      { name: 'LUXEMBOURG IN CHINA', categories: ['Cities.culture.art'], impacts: ['Retail'] },
-      { name: 'TONGJI UNIVERSITY', categories: ['Cities.culture.art'], impacts: ['Branding', 'Retail'] },
-      { name: 'UNIVERSITY COLLABORATIONS', categories: ['Cities.culture.art'], impacts: ['East.West', 'Strategy.Culture'] },
-      { name: 'CONFUCIUS SECONDARY SCHOOL', categories: ['Cities.culture.art'], impacts: ['Creative Solution'] },
-      { name: 'DANISH DESIGN AWARD', categories: ['Cities.culture.art'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
-      { name: 'WORLD DESIGN CAPITAL', categories: ['Cities.culture.art'], impacts: ['East.West'] },
-      { name: 'BANGKOK INTL DESIGN EXPO', categories: ['Cities.culture.art'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'PENANG INSTITUTE', categories: ['Cities.culture.art'], impacts: ['Branding'] },
-      { name: 'YUAN MUSEUM', categories: ['Cities.culture.art'], impacts: ['East.West'] },
-      { name: 'PALACE MUSEUM', categories: ['Cities.culture.art'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'ZENG FANZHI', categories: ['Cities.culture.art'], impacts: ['Branding'] },
-      { name: 'TED / TEDX', categories: ['Ecosystems'], impacts: ['East.West'] },
-      { name: 'BURNING MAN', categories: ['Ecosystems'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'PAN ASIA NETWORK', categories: ['Ecosystems'], impacts: ['Branding'] },
-      { name: 'SHANGHAI INDUSTRIAL MUSEUM', categories: ['Ecosystems'], impacts: ['East.West'] },
-      { name: 'EARTH ONE', categories: ['Ecosystems'], impacts: ['Culture', 'Creative Solution'] },
-      { name: 'ALTER PROJECTS', categories: ['Ecosystems'], impacts: ['Branding'] },
-      { name: 'ASIA-EUROPE BRIDGE', categories: ['Ecosystems'], impacts: ['Branding'] },
-      { name: 'BLOOMINGDALES NEW YORK', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'THE NEW YORK TIMES', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'URBAN ARCH BI-CITY BIENNALE', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'ISETAN', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'BENETTON', categories: ['Yesteryears'], impacts: ['Branding'] },
-      { name: 'SOTHEBYS AUCTION HOUSE, INTL REALTY', categories: ['Yesteryears'], impacts: ['Branding'] }
-    ];
+  const impactRingMap = {
+    'Strategy.Culture': 0,
+    'Branding': 1,
+    'Retail': 2,
+    'East.West': 3,
+    'Edu.Learning.Collective': 4,
+    'Creative Solution': 5
+  };
 
-    const impactRingMap = {
-      'Strategy.Culture': 0,
-      'Branding': 1,
-      'Retail': 2,
-      'East.West': 3,
-      'Edu.Learning.Collective': 4,
-      'Creative Solution': 5
-    };
+  const ringSpacing = 80;
+  const baseRadius = 100;
+  const ringColors = ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b', '#8ecae6'];
+  const maxLayers = 6;
 
-    const ringSpacing = 80;
-    const baseRadius = 100;
-    const ringColors = ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b', '#8ecae6'];
-    const maxLayers = 6;
+  let nodeId = 0;
+  const nodes = [], links = [];
 
-    let nodeId = 0;
-    const nodes = [], links = [];
+  const centerNodeId = nodeId++;
+  nodes.push({ id: centerNodeId, fx: 0, fy: 0, size: 4, color: '#000000' });
 
-    const centerNodeId = nodeId++;
-    nodes.push({ id: centerNodeId, fx: 0, fy: 0, size: 4, color: '#000000' });
+  entities.forEach((entity, index) => {
+    const angle = (2 * Math.PI * index) / entities.length;
+    let lastNodeId = centerNodeId;
 
-    entities.forEach((entity, index) => {
-      const angle = (2 * Math.PI * index) / entities.length;
-      let lastNodeId = centerNodeId;
+    entity.impacts.forEach(impact => {
+      const ringIndex = impactRingMap[impact] ?? 0;
+      const radius = baseRadius + ringIndex * ringSpacing;
+      const x = radius * Math.cos(angle);
+      const y = radius * Math.sin(angle);
 
-      entity.impacts.forEach(impact => {
-        const ringIndex = impactRingMap[impact] ?? 0;
-        const radius = baseRadius + ringIndex * ringSpacing;
-        const x = radius * Math.cos(angle);
-        const y = radius * Math.sin(angle);
-
-        const thisNodeId = nodeId++;
-        nodes.push({
-          id: thisNodeId,
-          fx: x,
-          fy: y,
-          name: entity.name,
-          categories: entity.categories,
-          impact: impact,
-          radialIndex: index,
-          size: 6,
-          color: ringColors[ringIndex % ringColors.length]
-        });
-
-        links.push({
-          source: lastNodeId,
-          target: thisNodeId,
-          radialIndex: index
-        });
-
-        lastNodeId = thisNodeId;
+      const thisNodeId = nodeId++;
+      nodes.push({
+        id: thisNodeId,
+        fx: x,
+        fy: y,
+        name: entity.name,
+        categories: entity.categories,
+        impact: impact,
+        radialIndex: index,
+        size: 6,
+        color: ringColors[ringIndex % ringColors.length]
       });
-    });
 
-    const gData = { nodes, links };
-    const Graph = ForceGraph()(document.getElementById('graph'))
-    .graphData(gData)
-    .enableNodeDrag(false)
-    .linkDirectionalParticles(0)
-    .linkWidth(() => 0.5)
-    .linkColor(() => '#000000')
-    .nodeCanvasObject((node, ctx, globalScale) => {
-          if (node.id === centerNodeId) {
+      links.push({
+        source: lastNodeId,
+        target: thisNodeId,
+        radialIndex: index
+      });
+
+      lastNodeId = thisNodeId;
+    });
+  });
+
+  const gData = { nodes, links };
+  const Graph = ForceGraph()(document.getElementById('graph'))
+  .graphData(gData)
+  .enableNodeDrag(false)
+  .linkDirectionalParticles(0)
+  .linkWidth(() => 0.5)
+  .linkColor(() => '#000000')
+  .nodeCanvasObject((node, ctx, globalScale) => {
+    if (node.id === centerNodeId) {
         // Draw concentric rings around center
-            ctx.save();
+      ctx.save();
         ctx.translate(node.x, node.y); // Needed to draw arcs at the center node's position
         ctx.strokeStyle = '#ddd';
         ctx.lineWidth = 1;
@@ -189,152 +206,152 @@
         ctx.fill();
       }
     })
-    .onEngineStop(() => {
-      const initialZoom = Graph.zoom() * 0.5;
-      Graph.zoom(initialZoom);
-      Graph.centerAt(0, 0, 0);
-    });
+  .onEngineStop(() => {
+    const initialZoom = Graph.zoom() * 0.5;
+    Graph.zoom(initialZoom);
+    Graph.centerAt(0, 0, 0);
+  });
 
     // Filters UI
-    const allCategories = [...new Set(entities.flatMap(e => e.categories))];
-    const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
+  const allCategories = [...new Set(entities.flatMap(e => e.categories))];
+  const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
 
-    function createCheckbox(filterType, value) {
-      const label = document.createElement('label');
-      label.style.display = 'block';
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.value = value;
-      checkbox.name = filterType;
-      checkbox.onchange = applyFilters;
-      label.appendChild(checkbox);
-      label.appendChild(document.createTextNode(' ' + value));
-      return label;
-    }
+  function createCheckbox(filterType, value) {
+    const label = document.createElement('label');
+    label.style.display = 'block';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = value;
+    checkbox.name = filterType;
+    checkbox.onchange = applyFilters;
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(' ' + value));
+    return label;
+  }
 
-    function createFilterList(containerId, filterType, values) {
-      const container = document.getElementById(containerId);
-      values.forEach(value => {
-        const item = document.createElement('div');
-        item.className = 'filter-item';
-        item.textContent = value;
-        item.dataset.type = filterType;
-        item.dataset.value = value;
-        item.onclick = (e) => {
-          const type = item.dataset.type;
+  function createFilterList(containerId, filterType, values) {
+    const container = document.getElementById(containerId);
+    values.forEach(value => {
+      const item = document.createElement('div');
+      item.className = 'filter-item';
+      item.textContent = value;
+      item.dataset.type = filterType;
+      item.dataset.value = value;
+      item.onclick = (e) => {
+        const type = item.dataset.type;
 
-          if (type === 'category') {
-            const allCategoryItems = document.querySelectorAll('.filter-item[data-type="category"]');
-            const isActive = item.classList.contains('active');
+        if (type === 'category') {
+          const allCategoryItems = document.querySelectorAll('.filter-item[data-type="category"]');
+          const isActive = item.classList.contains('active');
 
             // Clear all active categories
-            allCategoryItems.forEach(el => el.classList.remove('active'));
+          allCategoryItems.forEach(el => el.classList.remove('active'));
 
-            if (!isActive) {
-              item.classList.add('active');
-              showEntityList(item.dataset.value, item, e);
-            } else {
-              hideEntityList();
-            }
-          } else if (type === 'impact') {
-            // Just toggle this one impact item
-            item.classList.toggle('active');
+          if (!isActive) {
+            item.classList.add('active');
+            showEntityList(item.dataset.value, item, e);
+          } else {
+            hideEntityList();
           }
-
-          applyFilters();
-        };
-        container.appendChild(item);
-      });
-    }
-
-    createFilterList('categoryFilters', 'category', allCategories);
-    createFilterList('impactFilters', 'impact', allImpacts);
-
-
-    function getActiveFilters(type) {
-      return [...document.querySelectorAll(`.filter-item.active[data-type="${type}"]`)]
-      .map(el => el.dataset.value);
-    }
-
-    function applyFilters() {
-      const selectedCategories = getActiveFilters('category');
-      const selectedImpacts = getActiveFilters('impact');
-
-      const radialToInclude = new Set();
-
-      nodes.forEach(n => {
-        if (!n.name) return;
-        const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
-        const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
-        if (catMatch && impMatch) {
-          radialToInclude.add(n.radialIndex);
+        } else if (type === 'impact') {
+            // Just toggle this one impact item
+          item.classList.toggle('active');
         }
-      });
 
-      const filteredNodes = nodes.filter(n =>
-        n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
-        );
+        applyFilters();
+      };
+      container.appendChild(item);
+    });
+  }
 
-      const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
+  createFilterList('categoryFilters', 'category', allCategories);
+  createFilterList('impactFilters', 'impact', allImpacts);
 
-      const filteredLinks = links
-      .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
-      .map(link => ({
-        source: nodeMap.get(link.source.id ?? link.source),
-        target: nodeMap.get(link.target.id ?? link.target),
-        radialIndex: link.radialIndex
-      }));
 
-      Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
+  function getActiveFilters(type) {
+    return [...document.querySelectorAll(`.filter-item.active[data-type="${type}"]`)]
+    .map(el => el.dataset.value);
+  }
+
+  function applyFilters() {
+    const selectedCategories = getActiveFilters('category');
+    const selectedImpacts = getActiveFilters('impact');
+
+    const radialToInclude = new Set();
+
+    nodes.forEach(n => {
+      if (!n.name) return;
+      const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
+      const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
+      if (catMatch && impMatch) {
+        radialToInclude.add(n.radialIndex);
+      }
+    });
+
+    const filteredNodes = nodes.filter(n =>
+      n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
+      );
+
+    const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
+
+    const filteredLinks = links
+    .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
+    .map(link => ({
+      source: nodeMap.get(link.source.id ?? link.source),
+      target: nodeMap.get(link.target.id ?? link.target),
+      radialIndex: link.radialIndex
+    }));
+
+    Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
 
       // Populate entity list for selected category
-      const entityListContainer = document.getElementById('entityList');
-      entityListContainer.innerHTML = '';
+    const entityListContainer = document.getElementById('entityList');
+    entityListContainer.innerHTML = '';
 
-      if (selectedCategories.length === 1 && selectedImpacts.length === 0) {
-        const selectedCategory = selectedCategories[0];
-        const matchingEntities = entities
-        .filter(e => e.categories.includes(selectedCategory))
-        .map(e => e.name);
+    if (selectedCategories.length === 1 && selectedImpacts.length === 0) {
+      const selectedCategory = selectedCategories[0];
+      const matchingEntities = entities
+      .filter(e => e.categories.includes(selectedCategory))
+      .map(e => e.name);
 
-        matchingEntities.forEach(name => {
-          const item = document.createElement('div');
-          item.className = 'entity-item';
-          item.textContent = name;
+      matchingEntities.forEach(name => {
+        const item = document.createElement('div');
+        item.className = 'entity-item';
+        item.textContent = name;
 
-          item.onclick = () => {
-            const entityRadialIndex = nodes.find(n => n.name === name)?.radialIndex;
-            if (entityRadialIndex === undefined) return;
+        item.onclick = () => {
+          const entityRadialIndex = nodes.find(n => n.name === name)?.radialIndex;
+          if (entityRadialIndex === undefined) return;
 
-            const filteredNodes = nodes.filter(n =>
-              n.id === centerNodeId || n.radialIndex === entityRadialIndex
-              );
-            const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
-            const filteredLinks = links
-            .filter(link =>
-              nodeMap.has(link.source.id ?? link.source) &&
-              nodeMap.has(link.target.id ?? link.target)
-              )
-            .map(link => ({
-              source: nodeMap.get(link.source.id ?? link.source),
-              target: nodeMap.get(link.target.id ?? link.target),
-              radialIndex: link.radialIndex
-            }));
+          const filteredNodes = nodes.filter(n =>
+            n.id === centerNodeId || n.radialIndex === entityRadialIndex
+            );
+          const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
+          const filteredLinks = links
+          .filter(link =>
+            nodeMap.has(link.source.id ?? link.source) &&
+            nodeMap.has(link.target.id ?? link.target)
+            )
+          .map(link => ({
+            source: nodeMap.get(link.source.id ?? link.source),
+            target: nodeMap.get(link.target.id ?? link.target),
+            radialIndex: link.radialIndex
+          }));
 
-            Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
-          };
+          Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
+        };
 
-          entityListContainer.appendChild(item);
-        });
+        entityListContainer.appendChild(item);
+      });
 
-        entityListContainer.style.display = 'block';
-      } else {
-        entityListContainer.style.display = 'none';
-      }  
-    }
-    function showEntityList(category, clickedElement, event) {
-      const matchingEntities = entities.filter(e => e.categories.includes(category));
-      const entityListEl = document.getElementById('entityList');
+      entityListContainer.style.display = 'block';
+    } else {
+      entityListContainer.style.display = 'none';
+    }  
+  }
+  function showEntityList(category, clickedElement, event) {
+    const matchingEntities = entities.filter(e => e.categories.includes(category));
+    const entityListEl = document.getElementById('entityList');
       entityListEl.innerHTML = ''; // clear previous
 
       matchingEntities.forEach(entity => {
@@ -381,6 +398,16 @@
       }));
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
+
+      showInfoPopup(targetEntity);
+    }
+    
+    function showInfoPopup(entity) {
+      const popup = document.getElementById('infoPopup');
+      document.getElementById('popupName').textContent = entity.name;
+      document.getElementById('popupCategory').textContent = `Category: ${entity.categories.join(', ')}`;
+      document.getElementById('popupImpact').textContent = `Impact: ${entity.impacts.join(', ')}`;
+      popup.style.display = 'block';
     }
   </script>
 </body>
