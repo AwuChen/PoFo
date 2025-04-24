@@ -145,6 +145,9 @@
   nodes.push({ id: centerNodeId, fx: 0, fy: 0, size: 4, color: '#000000' });
 
   entities.forEach((entity, index) => {
+
+    entity.radialIndex = index; // <- Add this line
+
     const angle = (2 * Math.PI * index) / entities.length;
     let lastNodeId = centerNodeId;
 
@@ -379,10 +382,7 @@
       const targetEntity = entities.find(e => e.name === name);
       if (!targetEntity) return;
 
-      const radialIndexSet = new Set();
-      entities.forEach((e, i) => {
-        if (e.name === name) radialIndexSet.add(i);
-      });
+      const radialIndexSet = new Set([targetEntity.radialIndex]);
 
       const filteredNodes = nodes.filter(n =>
         n.id === centerNodeId || (n.radialIndex !== undefined && radialIndexSet.has(n.radialIndex))
@@ -401,7 +401,7 @@
 
       showInfoPopup(targetEntity);
     }
-    
+
     function showInfoPopup(entity) {
       const popup = document.getElementById('infoPopup');
       document.getElementById('popupName').textContent = entity.name;
