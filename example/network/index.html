@@ -32,6 +32,32 @@
     .filter-item.active {
       color: #000;
       padding: 2px 6px;
+
+      #entityList {
+        position: absolute;
+        top: 10px;
+        left: 200px; /* adjust this based on your layout */
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 10px;
+        border-radius: 8px;
+        font-family: sans-serif;
+        max-height: 90vh;
+        overflow-y: auto;
+        display: none;
+      }
+
+      .entity-item {
+        font-size: 14px;
+        margin: 4px 0;
+        cursor: pointer;
+        color: #333;
+        transition: background 0.2s;
+      }
+
+      .entity-item:hover {
+        background: #eee;
+      }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
@@ -42,9 +68,8 @@
     <div id="categoryFilters"></div>
     <h3>APPROACH & IMPACT</h3>
     <div id="impactFilters"></div>
-    <h3>Entities in Category</h3>
-    <div id="entityList"></div>
   </div>
+  <div id="entityList"></div>
   <div id="graph"></div>
 
   <script>
@@ -251,34 +276,25 @@
       const entityListContainer = document.getElementById('entityList');
       entityListContainer.innerHTML = '';
 
-      if (selectedCategories.length === 1) {
-        const matchingNames = new Set();
+      if (selectedCategories.length === 1 && selectedImpacts.length === 0) {
+        const selectedCategory = selectedCategories[0];
+        const matchingEntities = entities
+        .filter(e => e.categories.includes(selectedCategory))
+        .map(e => e.name);
 
-        nodes.forEach(n => {
-          if (n.name && selectedCategories.some(cat => n.categories.includes(cat))) {
-            matchingNames.add(n.name);
-          }
-        });
-
-        [...matchingNames].sort().forEach(name => {
+        matchingEntities.forEach(name => {
           const item = document.createElement('div');
+          item.className = 'entity-item';
           item.textContent = name;
-          item.style.cursor = 'pointer';
-          item.style.padding = '2px 4px';
-          item.style.fontSize = '14px';
-          item.style.color = '#333';
-          item.onclick = () => {
-            const selectedEntity = name;
-            const entityRadialIndex = nodes.find(n => n.name === selectedEntity)?.radialIndex;
 
+          item.onclick = () => {
+            const entityRadialIndex = nodes.find(n => n.name === name)?.radialIndex;
             if (entityRadialIndex === undefined) return;
 
             const filteredNodes = nodes.filter(n =>
               n.id === centerNodeId || n.radialIndex === entityRadialIndex
               );
-
             const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
-
             const filteredLinks = links
             .filter(link =>
               nodeMap.has(link.source.id ?? link.source) &&
@@ -292,10 +308,14 @@
 
             Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
           };
+
           entityListContainer.appendChild(item);
         });
-      }
 
+        entityListContainer.style.display = 'block';
+      } else {
+        entityListContainer.style.display = 'none';
+      }  
     }
   </script>
 </body>
