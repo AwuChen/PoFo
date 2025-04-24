@@ -36,7 +36,7 @@
   <div id="filter-container"></div>
   <div id="3d-graph"></div>
 
-  <script src="https://unpkg.com/3d-force-graph"></script>
+  <script src="https://unpkg.com/3d-force-graph/dist/3d-force-graph.min.js"></script>
   <script>
     const entities = [
       { id: 1, name: 'URF / TX THE BOX', category: 'Forces', impact: 'High' },
@@ -70,7 +70,7 @@
 
     const centerNode = { id: 0, name: 'CENTER', category: 'Core', impact: 'High' };
 
-    const Graph = ForceGraph()(document.getElementById('3d-graph'))
+    const Graph = ForceGraph3D()(document.getElementById('3d-graph'))
       .nodeId('id')
       .nodeLabel('name')
       .nodeAutoColorBy('category')
