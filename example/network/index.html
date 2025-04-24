@@ -218,19 +218,24 @@
         item.dataset.type = filterType;
         item.dataset.value = value;
         item.onclick = (e) => {
-          const allCategoryItems = document.querySelectorAll('.filter-item[data-type="category"]');
-          const isActive = item.classList.contains('active');
+          const type = item.dataset.type;
 
-          // Clear all active classes
-          allCategoryItems.forEach(el => el.classList.remove('active'));
+          if (type === 'category') {
+            const allCategoryItems = document.querySelectorAll('.filter-item[data-type="category"]');
+            const isActive = item.classList.contains('active');
 
-          if (!isActive) {
-            // Only activate if it wasn't already active
-            item.classList.add('active');
-            showEntityList(item.dataset.value, item, e);
-          } else {
-            // If it was active, we just deactivated it, so hide the list
-            hideEntityList();
+            // Clear all active categories
+            allCategoryItems.forEach(el => el.classList.remove('active'));
+
+            if (!isActive) {
+              item.classList.add('active');
+              showEntityList(item.dataset.value, item, e);
+            } else {
+              hideEntityList();
+            }
+          } else if (type === 'impact') {
+            // Just toggle this one impact item
+            item.classList.toggle('active');
           }
 
           applyFilters();
