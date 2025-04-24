@@ -32,32 +32,28 @@
     .filter-item.active {
       color: #000;
       padding: 2px 6px;
-
-      #entityList {
-        position: absolute;
-        top: 10px;
-        left: 200px; /* adjust this based on your layout */
-        z-index: 10;
-        background: rgba(255, 255, 255, 0.95);
-        padding: 10px;
-        border-radius: 8px;
-        font-family: sans-serif;
-        max-height: 90vh;
-        overflow-y: auto;
-        display: none;
-      }
-
-      .entity-item {
-        font-size: 14px;
-        margin: 4px 0;
-        cursor: pointer;
-        color: #333;
-        transition: background 0.2s;
-      }
-
-      .entity-item:hover {
-        background: #eee;
-      }
+    }
+    #entityList {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      z-index: 11;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      max-height: 90vh;
+      overflow-y: auto;
+      display: none; /* hidden by default */
+    }
+    #entityList div {
+      cursor: pointer;
+      margin: 4px 0;
+      color: #444;
+      font-weight: 500;
+      font-size: 15px;
+    }
+    #entityList div:hover {
+      color: #000;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
@@ -224,9 +220,10 @@
         item.textContent = value;
         item.dataset.type = filterType;
         item.dataset.value = value;
-        item.onclick = () => {
+        item.onclick = (e) => {
           item.classList.toggle('active');
           applyFilters();
+          showEntityList(item.dataset.value, item, e); // Pass the item and click event
         };
         container.appendChild(item);
       });
@@ -316,6 +313,51 @@
       } else {
         entityListContainer.style.display = 'none';
       }  
+    }
+    function showEntityList(category, clickedElement, event) {
+      const matchingEntities = entities.filter(e => e.categories.includes(category));
+      const entityListEl = document.getElementById('entityList');
+      entityListEl.innerHTML = ''; // clear previous
+
+      matchingEntities.forEach(entity => {
+        const el = document.createElement('div');
+        el.textContent = entity.name;
+        el.onclick = () => {
+          filterToEntity(entity.name);
+        };
+        entityListEl.appendChild(el);
+      });
+
+      // Position to the right of clicked category
+      const rect = clickedElement.getBoundingClientRect();
+      entityListEl.style.left = `${rect.right + 10}px`;
+      entityListEl.style.top = `${rect.top + window.scrollY}px`;
+      entityListEl.style.display = 'block';
+    }
+
+    function filterToEntity(name) {
+      const targetEntity = entities.find(e => e.name === name);
+      if (!targetEntity) return;
+
+      const radialIndexSet = new Set();
+      entities.forEach((e, i) => {
+        if (e.name === name) radialIndexSet.add(i);
+      });
+
+      const filteredNodes = nodes.filter(n =>
+        n.id === centerNodeId || (n.radialIndex !== undefined && radialIndexSet.has(n.radialIndex))
+      );
+
+      const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
+      const filteredLinks = links
+        .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
+        .map(link => ({
+          source: nodeMap.get(link.source.id ?? link.source),
+          target: nodeMap.get(link.target.id ?? link.target),
+          radialIndex: link.radialIndex
+        }));
+
+      Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
     }
   </script>
 </body>
