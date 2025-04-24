@@ -282,7 +282,7 @@
 
       // Store the camera state
       const zoom = Graph.zoom();
-      const { x, y } = Graph.cameraPosition();
+      const { x, y } = Graph.centerAt();
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
 
