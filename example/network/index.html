@@ -286,6 +286,11 @@
         if (!n.name) return;
 
         const nameMatch = selectedEntities.length === 0 || selectedEntities.includes(n.name);
+        
+        const impactMatch =
+        selectedImpacts.length === 0 ||
+        (n.impact && selectedImpacts.includes(n.impact));
+
         const categoryMatch =
         selectedCategories.length === 0 ||
         (n.flattenedCategories &&
