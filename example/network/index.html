@@ -280,7 +280,8 @@
         if (!n.name) return;
 
         const nameMatch = selectedEntities.length === 0 || selectedEntities.includes(n.name);
-        const categoryMatch = selectedCategories.length === 0 || n.categories.some(cat => selectedCategories.includes(cat));
+        const categoryMatch = selectedCategories.length === 0 ||
+          (Array.isArray(n.categories) && n.categories.some(cat => selectedCategories.includes(cat)));
         const impactMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
 
         if ((nameMatch || categoryMatch) && impactMatch) {
