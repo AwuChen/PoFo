@@ -163,6 +163,11 @@
     const gData = { nodes, links };
     const Graph = ForceGraph()(document.getElementById('graph'))
     .graphData(gData)
+    .onEngineStop(() => {
+      const initialZoom = Graph.zoom() * 0.8;
+      Graph.zoom(initialZoom);
+      Graph.centerAt(0, 0, 0);
+    });
     .enableNodeDrag(false)
     .linkDirectionalParticles(0)
     .linkWidth(() => 0.5)
