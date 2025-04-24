@@ -183,7 +183,7 @@
     allImpacts.forEach(imp => impactDiv.appendChild(createCheckbox('impact', imp)));
 
     function getCheckedFilters(name) {
-      return [...document.querySelectorAll(input[name="${name}"]:checked)].map(cb => cb.value);
+      return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(cb => cb.value);
     }
 
     function applyFilters() {
