@@ -20,6 +20,21 @@
       margin-top: 10px;
       margin-bottom: 5px;
     }
+    .filter-item {
+      font-size: 16px;
+      margin: 4px 0;
+      cursor: pointer;
+      color: #999;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+
+    .filter-item.active {
+      color: #000;
+      background-color: #ccc;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
 </head>
@@ -176,19 +191,34 @@
       return label;
     }
 
-    const categoryDiv = document.getElementById('categoryFilters');
-    allCategories.forEach(cat => categoryDiv.appendChild(createCheckbox('category', cat)));
+    function createFilterList(containerId, filterType, values) {
+      const container = document.getElementById(containerId);
+      values.forEach(value => {
+        const item = document.createElement('div');
+        item.className = 'filter-item';
+        item.textContent = value;
+        item.dataset.type = filterType;
+        item.dataset.value = value;
+        item.onclick = () => {
+          item.classList.toggle('active');
+          applyFilters();
+        };
+        container.appendChild(item);
+      });
+    }
 
-    const impactDiv = document.getElementById('impactFilters');
-    allImpacts.forEach(imp => impactDiv.appendChild(createCheckbox('impact', imp)));
+    createFilterList('categoryFilters', 'category', allCategories);
+    createFilterList('impactFilters', 'impact', allImpacts);
 
-    function getCheckedFilters(name) {
-      return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(cb => cb.value);
+
+    function getActiveFilters(type) {
+      return [...document.querySelectorAll(`.filter-item.active[data-type="${type}"]`)]
+      .map(el => el.dataset.value);
     }
 
     function applyFilters() {
-      const selectedCategories = getCheckedFilters('category');
-      const selectedImpacts = getCheckedFilters('impact');
+      const selectedCategories = getActiveFilters('category');
+      const selectedImpacts = getActiveFilters('impact');
 
       const radialToInclude = new Set();
 
