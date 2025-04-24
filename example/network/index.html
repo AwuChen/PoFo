@@ -285,28 +285,34 @@
       nodes.forEach(n => {
         if (!n.name) return;
 
+    // Check for name filter
         const nameMatch = selectedEntities.length === 0 || selectedEntities.includes(n.name);
-        
-        const impactMatch =
-        selectedImpacts.length === 0 ||
-        (n.impact && selectedImpacts.includes(n.impact));
 
-        const categoryMatch =
-        selectedCategories.length === 0 ||
-        (n.flattenedCategories &&
-          n.flattenedCategories.some(cat => selectedCategories.includes(cat)));
+    // Check for impact filter
+        const impactMatch = selectedImpacts.length === 0 || (n.impact && selectedImpacts.includes(n.impact));
+
+    // Check for category match
+        const categoryMatch = selectedCategories.length === 0 || selectedCategories.some(selectedCategory => {
+      // If the category is a main category, include all subcategories
+          if (n.flattenedCategories && n.flattenedCategories.includes(selectedCategory)) {
+            return true;
+          }
+          return false;
+        });
 
         if ((nameMatch || categoryMatch) && impactMatch) {
           radialToInclude.add(n.radialIndex);
         }
       });
 
+  // Filter nodes by radial index
       const filteredNodes = nodes.filter(n =>
         n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
         );
 
       const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
 
+  // Filter links based on nodes
       const filteredLinks = links
       .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
       .map(link => ({
@@ -315,6 +321,7 @@
         radialIndex: link.radialIndex
       }));
 
+  // Apply the filtered graph data
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
     }
   </script>
