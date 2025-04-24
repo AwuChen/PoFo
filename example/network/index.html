@@ -188,12 +188,12 @@
         ctx.fillStyle = node.color || '#666';
         ctx.fill();
       }
-    }
+    })
     .onEngineStop(() => {
       const initialZoom = Graph.zoom() * 0.5;
       Graph.zoom(initialZoom);
       Graph.centerAt(0, 0, 0);
-    }));
+    });
 
     // Filters UI
     const allCategories = [...new Set(entities.flatMap(e => e.categories))];
