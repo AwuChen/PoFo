@@ -34,8 +34,6 @@
     }
     #entityList {
       position: absolute;
-      padding: 10px;
-      border-radius: 8px;
       font-family: sans-serif;
       z-index: 11;
       max-height: 90vh;
@@ -287,9 +285,6 @@
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
 
-       // Restore the camera state
-      Graph.camera(cameraState);
-
       // Populate entity list for selected category
       const entityListContainer = document.getElementById('entityList');
       entityListContainer.innerHTML = '';
@@ -334,6 +329,9 @@
       } else {
         entityListContainer.style.display = 'none';
       }  
+
+      // Restore the camera state
+      Graph.camera(cameraState);
     }
     function showEntityList(category, clickedElement, event) {
       const matchingEntities = entities.filter(e => e.categories.includes(category));
