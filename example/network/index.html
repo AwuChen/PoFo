@@ -205,26 +205,74 @@
       });
     }
 
-    createFilterList('categoryFilters', 'category', allCategories);
+    function createNestedCategoryList(containerId) {
+      const container = document.getElementById(containerId);
+      const categoryMap = {};
+
+      entities.forEach(entity => {
+        entity.categories.forEach(cat => {
+          if (!categoryMap[cat]) categoryMap[cat] = [];
+          categoryMap[cat].push(entity.name);
+        });
+      });
+
+      Object.entries(categoryMap).forEach(([cat, entityNames]) => {
+        const categoryHeader = document.createElement('div');
+        categoryHeader.className = 'filter-item';
+        categoryHeader.textContent = cat;
+
+        const entityList = document.createElement('div');  // move this up!
+        entityList.style.marginLeft = '10px';
+        entityList.style.display = 'none';
+
+        categoryHeader.onclick = () => {
+          categoryHeader.classList.toggle('active');
+          entityList.style.display = categoryHeader.classList.contains('active') ? 'block' : 'none';
+        };
+
+        container.appendChild(categoryHeader);
+        entityList.style.marginLeft = '10px';
+        entityList.style.display = 'none';
+
+        entityNames.forEach(name => {
+          const item = document.createElement('div');
+          item.className = 'filter-item';
+          item.textContent = name;
+          item.dataset.type = 'entity';
+          item.dataset.value = name;
+          item.onclick = (e) => {
+        e.stopPropagation(); // prevent toggling category visibility
+        item.classList.toggle('active');
+        applyFilters();
+      };
+      entityList.appendChild(item);
+    });
+
+        container.appendChild(entityList);
+      });
+    }
+
+    createNestedCategoryList('categoryFilters');
+
     createFilterList('impactFilters', 'impact', allImpacts);
 
 
-    function getActiveFilters(type) {
-      return [...document.querySelectorAll(`.filter-item.active[data-type="${type}"]`)]
+    function getActiveEntityNames() {
+      return [...document.querySelectorAll(`.filter-item.active[data-type="entity"]`)]
       .map(el => el.dataset.value);
     }
 
     function applyFilters() {
-      const selectedCategories = getActiveFilters('category');
+      const selectedEntities = getActiveEntityNames();
       const selectedImpacts = getActiveFilters('impact');
 
       const radialToInclude = new Set();
 
       nodes.forEach(n => {
         if (!n.name) return;
-        const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
+        const nameMatch = selectedEntities.length === 0 || selectedEntities.includes(n.name);
         const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
-        if (catMatch && impMatch) {
+        if (nameMatch && impMatch) {
           radialToInclude.add(n.radialIndex);
         }
       });
