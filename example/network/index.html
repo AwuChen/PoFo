@@ -457,6 +457,29 @@
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
     }
 
+    // Populate entityList
+    const entityList = document.getElementById('entityList');
+    entityList.style.display = 'block'; // Show the list
+
+    entities.forEach(entity => {
+      const item = document.createElement('div');
+      item.textContent = entity.name;
+      item.addEventListener('click', () => showPopup(entity));
+      entityList.appendChild(item);
+    });
+
+    function showPopup(entity) {
+      document.getElementById('popupName').textContent = entity.name;
+      document.getElementById('popupCategory').textContent = 'Category: ' + entity.categories.join(', ');
+      document.getElementById('popupImpact').textContent = 'Impact: ' + entity.impacts.join(', ');
+      document.getElementById('infoPopup').style.display = 'block';
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!document.getElementById('infoPopup').contains(e.target) && !entityList.contains(e.target)) {
+        document.getElementById('infoPopup').style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>
