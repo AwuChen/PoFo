@@ -60,7 +60,11 @@
     <h3>APPROACH & IMPACT</h3>
     <div id="impactFilters"></div>
   </div>
-  <div id="entityList"></div>
+  <!-- Entity list popup -->
+  <div id="entityList" class="popup" style="display:none;"></div>
+
+  <!-- Entity detail popup -->
+  <div id="entityPopup" class="popup" style="display:none;"></div>
   <div id="graph"></div>
   <div id="infoPopup" style="
   position: absolute;
@@ -419,6 +423,9 @@
         el.textContent = entity.name;
         el.onclick = () => {
           filterToEntity(entity.name);
+          showEntityPopup(entity, el); // trigger secondary popup
+          entityListEl.style.display = 'none'; // Hide the list after selecting
+
         };
         entityListEl.appendChild(el);
       });
@@ -457,34 +464,20 @@
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
     }
 
-    // Show entity list and populate it with entities
-    const entityListDiv = document.getElementById('entityList');
-    entityListDiv.style.display = 'block';
-    entityListDiv.innerHTML = ''; // clear any existing content
+    function showEntityPopup(entity, anchorElement) {
+      const popup = document.getElementById('entityPopup');
+      popup.innerHTML = `
+        <strong>${entity.name}</strong><br>
+        <em>${entity.description || 'No description available.'}</em>
+      `;
 
-    entities.forEach(entity => {
-      const entityItem = document.createElement('div');
-      entityItem.textContent = entity.name;
+      const rect = anchorElement.getBoundingClientRect();
+      popup.style.position = 'absolute';
+      popup.style.left = `${rect.right + 10}px`;
+      popup.style.top = `${rect.top + window.scrollY}px`;
+      popup.style.display = 'block';
+    }
 
-      entityItem.addEventListener('click', () => {
-        // Show popup and fill in the details
-        document.getElementById('popupName').textContent = entity.name;
-        document.getElementById('popupCategory').textContent = 'Category: ' + entity.categories.join(', ');
-        document.getElementById('popupImpact').textContent = 'Impact: ' + entity.impacts.join(', ');
-
-        document.getElementById('infoPopup').style.display = 'block';
-      });
-
-      entityListDiv.appendChild(entityItem);
-    });
-
-    // Hide popup if clicked outside of it
-    document.addEventListener('click', function (e) {
-      const popup = document.getElementById('infoPopup');
-      if (!popup.contains(e.target) && !entityListDiv.contains(e.target)) {
-        popup.style.display = 'none';
-      }
-    });
   </script>
 </body>
 </html>
