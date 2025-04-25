@@ -64,8 +64,8 @@
   <div id="graph"></div>
   <div id="infoPopup" style="
   position: absolute;
-  top: 100px;
-  right: 20px;
+  top: 1000px;
+  right: 200px;
   background: white;
   border: 1px solid #ccc;
   padding: 12px;
@@ -444,16 +444,13 @@
       entityListEl.style.display = 'none';
     }
 
-    function filterToEntity(name) {
-      const targetEntity = entities.find(e => e.name === name);
-      if (!targetEntity) return;
-
-      const radialIndexSet = new Set([targetEntity.radialIndex]);
+    function filterToEntity(entityName) {
+      const entityRadialIndex = nodes.find(n => n.name === entityName)?.radialIndex;
+      if (entityRadialIndex === undefined) return;
 
       const filteredNodes = nodes.filter(n =>
-        n.id === centerNodeId || (n.radialIndex !== undefined && radialIndexSet.has(n.radialIndex))
+        n.id === centerNodeId || n.radialIndex === entityRadialIndex
       );
-
       const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
       const filteredLinks = links
         .filter(link =>
@@ -468,23 +465,21 @@
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
 
-      // Center graph on first visible node
-      const mainNode = filteredNodes.find(n => n.name === name);
-      if (mainNode) {
-        Graph.centerAt(mainNode.fx, mainNode.fy, 1000);
-        Graph.zoom(2, 1000);
-      }
-
-      // Show info popup
-      const nodeToShow = nodes.find(n => n.name === name && n.size > 0); // Skip invisible tips
-
+      const nodeToShow = filteredNodes.find(n => n.name === entityName && n.size > 0);
       if (nodeToShow) {
-        document.getElementById('popupName').textContent = nodeToShow.name;
-        document.getElementById('popupCategory').textContent = `Category: ${nodeToShow.categories.join(', ')}`;
-        document.getElementById('popupImpact').textContent = `Impact: ${nodeToShow.impact}`;
-        document.getElementById('infoPopup').style.display = 'block';
+        showPopupForNode(nodeToShow);
       }
     }
+
+    function showPopupForNode(node) {
+      if (!node || !node.name) return;
+
+      document.getElementById('popupName').textContent = node.name;
+      document.getElementById('popupCategory').textContent = `Category: ${node.categories.join(', ')}`;
+      document.getElementById('popupImpact').textContent = `Impact: ${node.impact}`;
+      document.getElementById('infoPopup').style.display = 'block';
+    }
+
   </script>
 </body>
 </html>
