@@ -78,7 +78,8 @@
   ">
   <strong id="popupName"></strong><br>
   <span id="popupCategory"></span><br>
-  <span id="popupImpact"></span>
+  <span id="popupImpact"></span><br><br>
+  <img id="popupImage" src="https://via.placeholder.com/280x150" style="width:100%; border-radius:6px; margin-top:10px;" />
 </div>
 <script>
   const entities = [
@@ -266,6 +267,19 @@
         ctx.fill();
       }
     })
+  .nodeLabel(node => node.name || '')
+  .onNodeClick(node => {
+    if (!node.name) return;
+
+    document.getElementById('popupName').textContent = node.name;
+    document.getElementById('popupCategory').textContent = `Category: ${node.categories.join(', ')}`;
+    document.getElementById('popupImpact').textContent = `Impact: ${node.impact}`;
+
+    // Optionally customize the image URL based on the node name
+    // document.getElementById('popupImage').src = `someDynamicImagePath/${node.name}.jpg`;
+
+    document.getElementById('infoPopup').style.display = 'block';
+  })
 
     // Filters UI
   const allCategories = [...new Set(entities.flatMap(e => e.categories))];
@@ -438,20 +452,32 @@
 
       const filteredNodes = nodes.filter(n =>
         n.id === centerNodeId || (n.radialIndex !== undefined && radialIndexSet.has(n.radialIndex))
-        );
+      );
 
       const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
       const filteredLinks = links
-      .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
-      .map(link => ({
-        source: nodeMap.get(link.source.id ?? link.source),
-        target: nodeMap.get(link.target.id ?? link.target),
-        radialIndex: link.radialIndex
-      }));
+        .filter(link =>
+          nodeMap.has(link.source.id ?? link.source) &&
+          nodeMap.has(link.target.id ?? link.target)
+        )
+        .map(link => ({
+          source: nodeMap.get(link.source.id ?? link.source),
+          target: nodeMap.get(link.target.id ?? link.target),
+          radialIndex: link.radialIndex
+        }));
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
-    }
 
+      // Center graph on first visible node
+      const mainNode = filteredNodes.find(n => n.name === name);
+      if (mainNode) {
+        Graph.centerAt(mainNode.fx, mainNode.fy, 1000);
+        Graph.zoom(2, 1000);
+      }
+
+      // Show info popup
+      showInfoPopup(targetEntity);
+    }
   </script>
 </body>
 </html>
