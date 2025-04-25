@@ -476,7 +476,14 @@
       }
 
       // Show info popup
-      showInfoPopup(targetEntity);
+      const nodeToShow = nodes.find(n => n.name === name && n.size > 0); // Skip invisible tips
+
+      if (nodeToShow) {
+        document.getElementById('popupName').textContent = nodeToShow.name;
+        document.getElementById('popupCategory').textContent = `Category: ${nodeToShow.categories.join(', ')}`;
+        document.getElementById('popupImpact').textContent = `Impact: ${nodeToShow.impact}`;
+        document.getElementById('infoPopup').style.display = 'block';
+      }
     }
   </script>
 </body>
