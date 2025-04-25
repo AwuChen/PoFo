@@ -177,6 +177,28 @@
       });
 
       lastNodeId = thisNodeId;
+
+          // Add invisible tip node extending the radial line
+      const tipRadius = baseRadius + maxLayers * ringSpacing + 20; // slightly beyond outer ring
+      const tipX = tipRadius * Math.cos(angle);
+      const tipY = tipRadius * Math.sin(angle);
+
+      const tipNodeId = nodeId++;
+      nodes.push({
+        id: tipNodeId,
+        fx: tipX,
+        fy: tipY,
+        radialIndex: index,
+        size: 0,        // Invisible
+        color: 'rgba(0,0,0,0)', // Fully transparent
+        isTip: true     // Optional flag, in case you want to filter later
+      });
+
+      links.push({
+        source: lastNodeId,
+        target: tipNodeId,
+        radialIndex: index
+      });
     });
   });
 
