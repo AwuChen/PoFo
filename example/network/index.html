@@ -64,8 +64,8 @@
   <div id="graph"></div>
   <div id="infoPopup" style="
   position: absolute;
-  top: 1000px;
-  right: 200px;
+  top: 100px;
+  right: 20px;
   background: white;
   border: 1px solid #ccc;
   padding: 12px;
@@ -444,13 +444,16 @@
       entityListEl.style.display = 'none';
     }
 
-    function filterToEntity(entityName) {
-      const entityRadialIndex = nodes.find(n => n.name === entityName)?.radialIndex;
-      if (entityRadialIndex === undefined) return;
+    function filterToEntity(name) {
+      const targetEntity = entities.find(e => e.name === name);
+      if (!targetEntity) return;
+
+      const radialIndexSet = new Set([targetEntity.radialIndex]);
 
       const filteredNodes = nodes.filter(n =>
-        n.id === centerNodeId || n.radialIndex === entityRadialIndex
+        n.id === centerNodeId || (n.radialIndex !== undefined && radialIndexSet.has(n.radialIndex))
       );
+
       const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
       const filteredLinks = links
         .filter(link =>
@@ -465,21 +468,16 @@
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
 
-      const nodeToShow = filteredNodes.find(n => n.name === entityName && n.size > 0);
-      if (nodeToShow) {
-        showPopupForNode(nodeToShow);
+      // Center graph on first visible node
+      const mainNode = filteredNodes.find(n => n.name === name);
+      if (mainNode) {
+        Graph.centerAt(mainNode.fx, mainNode.fy, 1000);
+        Graph.zoom(2, 1000);
       }
+
+      // Show info popup
+      showInfoPopup(targetEntity);
     }
-
-    function showPopupForNode(node) {
-      if (!node || !node.name) return;
-
-      document.getElementById('popupName').textContent = node.name;
-      document.getElementById('popupCategory').textContent = `Category: ${node.categories.join(', ')}`;
-      document.getElementById('popupImpact').textContent = `Impact: ${node.impact}`;
-      document.getElementById('infoPopup').style.display = 'block';
-    }
-
   </script>
 </body>
 </html>
