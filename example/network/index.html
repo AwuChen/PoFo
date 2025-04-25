@@ -457,27 +457,32 @@
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
     }
 
-    // Populate entityList
-    const entityList = document.getElementById('entityList');
-    entityList.style.display = 'block'; // Show the list
+    // Show entity list and populate it with entities
+    const entityListDiv = document.getElementById('entityList');
+    entityListDiv.style.display = 'block';
+    entityListDiv.innerHTML = ''; // clear any existing content
 
     entities.forEach(entity => {
-      const item = document.createElement('div');
-      item.textContent = entity.name;
-      item.addEventListener('click', () => showPopup(entity));
-      entityList.appendChild(item);
+      const entityItem = document.createElement('div');
+      entityItem.textContent = entity.name;
+
+      entityItem.addEventListener('click', () => {
+        // Show popup and fill in the details
+        document.getElementById('popupName').textContent = entity.name;
+        document.getElementById('popupCategory').textContent = 'Category: ' + entity.categories.join(', ');
+        document.getElementById('popupImpact').textContent = 'Impact: ' + entity.impacts.join(', ');
+
+        document.getElementById('infoPopup').style.display = 'block';
+      });
+
+      entityListDiv.appendChild(entityItem);
     });
 
-    function showPopup(entity) {
-      document.getElementById('popupName').textContent = entity.name;
-      document.getElementById('popupCategory').textContent = 'Category: ' + entity.categories.join(', ');
-      document.getElementById('popupImpact').textContent = 'Impact: ' + entity.impacts.join(', ');
-      document.getElementById('infoPopup').style.display = 'block';
-    }
-
-    document.addEventListener('click', (e) => {
-      if (!document.getElementById('infoPopup').contains(e.target) && !entityList.contains(e.target)) {
-        document.getElementById('infoPopup').style.display = 'none';
+    // Hide popup if clicked outside of it
+    document.addEventListener('click', function (e) {
+      const popup = document.getElementById('infoPopup');
+      if (!popup.contains(e.target) && !entityListDiv.contains(e.target)) {
+        popup.style.display = 'none';
       }
     });
   </script>
