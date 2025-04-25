@@ -455,17 +455,8 @@
       }));
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
-
-      showInfoPopup(targetEntity);
     }
 
-    function showInfoPopup(entity) {
-      const popup = document.getElementById('infoPopup');
-      document.getElementById('popupName').textContent = entity.name;
-      document.getElementById('popupCategory').textContent = `Category: ${entity.categories.join(', ')}`;
-      document.getElementById('popupImpact').textContent = `Impact: ${entity.impacts.join(', ')}`;
-      popup.style.display = 'block';
-    }
   </script>
 </body>
 </html>
