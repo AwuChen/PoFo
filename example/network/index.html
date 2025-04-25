@@ -466,6 +466,28 @@
       document.getElementById('popupImpact').textContent = `Impact: ${entity.impacts.join(', ')}`;
       popup.style.display = 'block';
     }
+
+
+    // Populate the entityList dynamically
+    const entityListDiv = document.getElementById('entityList');
+    entityListDiv.style.display = 'block'; // show the list
+
+    entities.forEach(entity => {
+      const div = document.createElement('div');
+      div.textContent = entity.name;
+      div.addEventListener('click', () => {
+        showEntityPopup(entity);
+      });
+      entityListDiv.appendChild(div);
+    });
+
+    // Function to show popup with entity info
+    function showEntityPopup(entity) {
+      document.getElementById('popupName').textContent = entity.name;
+      document.getElementById('popupCategory').textContent = 'Category: ' + entity.categories.join(', ');
+      document.getElementById('popupImpact').textContent = 'Impact: ' + entity.impacts.join(', ');
+      document.getElementById('infoPopup').style.display = 'block';
+    }
   </script>
 </body>
 </html>
