@@ -281,14 +281,33 @@
     document.getElementById('infoPopup').style.display = 'block';
   })
 
-  // Close info popup when clicking outside of it
+  let nodeJustClicked = false;
+
+  // Set flag when clicking on a node
+  graph.onNodeClick(node => {
+      if (!node.name) return;
+
+      document.getElementById('popupName').textContent = node.name;
+      document.getElementById('popupCategory').textContent = `Category: ${node.categories.join(', ')}`;
+      document.getElementById('popupImpact').textContent = `Impact: ${node.impact}`;
+
+      document.getElementById('infoPopup').style.display = 'block';
+
+      nodeJustClicked = true; // <-- important
+  });
+
+  // Listen for any document click
   document.addEventListener('click', function(event) {
       const popup = document.getElementById('infoPopup');
       const isClickInsidePopup = popup.contains(event.target);
-      const isNodeClick = event.target.closest('canvas'); // Check if click was on graph canvas
 
-      if (!isClickInsidePopup && !isNodeClick) {
-        popup.style.display = 'none';
+      if (nodeJustClicked) {
+          nodeJustClicked = false; // reset the flag after first click
+          return; // ignore this click
+      }
+
+      if (!isClickInsidePopup) {
+          popup.style.display = 'none';
       }
   });
 
