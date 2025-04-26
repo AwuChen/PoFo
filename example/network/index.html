@@ -270,8 +270,10 @@
   .nodeLabel(node => node.name || '')
   .onNodeClick(node => {
 
-    event.stopPropagation();
-    
+    if (window.event) {
+      window.event.stopPropagation();
+    }
+
     if (!node.name) return;
 
     document.getElementById('popupName').textContent = node.name;
