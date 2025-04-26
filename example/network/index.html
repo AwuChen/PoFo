@@ -269,6 +269,9 @@
     })
   .nodeLabel(node => node.name || '')
   .onNodeClick(node => {
+
+    event.stopPropagation();
+    
     if (!node.name) return;
 
     document.getElementById('popupName').textContent = node.name;
@@ -478,6 +481,17 @@
       // Show info popup
       showInfoPopup(targetEntity);
     }
+
+    // Close info popup when clicking outside
+    document.addEventListener('click', function(event) {
+      const popup = document.getElementById('infoPopup');
+      
+      // If popup is visible and click is outside popup
+      if (popup.style.display === 'block' && !popup.contains(event.target)) {
+        popup.style.display = 'none';
+      }
+    });
+
   </script>
 </body>
 </html>
