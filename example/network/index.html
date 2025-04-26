@@ -281,36 +281,6 @@
     document.getElementById('infoPopup').style.display = 'block';
   })
 
-  let nodeJustClicked = false;
-
-  // Set flag when clicking on a node
-  graph.onNodeClick(node => {
-      if (!node.name) return;
-
-      document.getElementById('popupName').textContent = node.name;
-      document.getElementById('popupCategory').textContent = `Category: ${node.categories.join(', ')}`;
-      document.getElementById('popupImpact').textContent = `Impact: ${node.impact}`;
-
-      document.getElementById('infoPopup').style.display = 'block';
-
-      nodeJustClicked = true; // <-- important
-  });
-
-  // Listen for any document click
-  document.addEventListener('click', function(event) {
-      const popup = document.getElementById('infoPopup');
-      const isClickInsidePopup = popup.contains(event.target);
-
-      if (nodeJustClicked) {
-          nodeJustClicked = false; // reset the flag after first click
-          return; // ignore this click
-      }
-
-      if (!isClickInsidePopup) {
-          popup.style.display = 'none';
-      }
-  });
-
     // Filters UI
   const allCategories = [...new Set(entities.flatMap(e => e.categories))];
   const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
