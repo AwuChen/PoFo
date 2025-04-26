@@ -279,9 +279,10 @@
     // document.getElementById('popupImage').src = `someDynamicImagePath/${node.name}.jpg`;
 
     document.getElementById('infoPopup').style.display = 'block';
+  })
 
-    // Close info popup when clicking outside of it
-    document.addEventListener('click', function(event) {
+  // Close info popup when clicking outside of it
+  document.addEventListener('click', function(event) {
       const popup = document.getElementById('infoPopup');
       const isClickInsidePopup = popup.contains(event.target);
       const isNodeClick = event.target.closest('canvas'); // Check if click was on graph canvas
@@ -289,8 +290,7 @@
       if (!isClickInsidePopup && !isNodeClick) {
         popup.style.display = 'none';
       }
-    });
-  })
+  });
 
     // Filters UI
   const allCategories = [...new Set(entities.flatMap(e => e.categories))];
