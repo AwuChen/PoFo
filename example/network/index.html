@@ -235,33 +235,47 @@
       ctx.fillStyle = node.color || '#666';
       ctx.fill();
 
-      if (node.size <= 0.1 && node.name) { // Only for tip nodes
+      if (node.size <= 0.1 && node.name) {
         const { fx, fy } = node;
-        const angle = Math.atan2(fy, fx); // Get angle of the node
+        const angle = Math.atan2(fy, fx);
+        const nodeRadius = 5; // Approximate radius
+        const gap = 5; // Spacing
+        const padding = 4;
+        const text = node.name;
 
-        ctx.save(); // Save current canvas state
+        ctx.save();
 
-        ctx.translate(fx, fy); // Move origin to node position
+        ctx.translate(fx, fy);
         const flip = (angle > Math.PI/2 || angle < -Math.PI/2);
         ctx.rotate(flip ? angle + Math.PI : angle);
 
         ctx.font = '10px sans-serif';
-        ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#000';
         ctx.strokeStyle = '#000';
 
-        const padding = 4;
-        const text = node.name;
         const textWidth = ctx.measureText(text).width;
 
-        // Draw background box (outline only)
-        ctx.strokeRect(-padding, -10/2 - padding/2, textWidth + 2*padding, 10 + padding);
+        const labelX = nodeRadius + gap;
 
-        // Draw text
-        ctx.fillText(text, 0, 0);
+        if (flip) {
+          // If flipped, align text to the right and move labelX negatively
+          ctx.textAlign = 'right';
+          
+          // Draw the box to the left
+          ctx.strokeRect(-labelX - textWidth - padding, -10/2 - padding/2, textWidth + 2*padding, 10 + padding);
+          
+          // Draw the text to the left
+          ctx.fillText(text, -labelX, 0);
+        } else {
+          ctx.textAlign = 'left';
+          
+          ctx.strokeRect(labelX - padding, -10/2 - padding/2, textWidth + 2*padding, 10 + padding);
+          
+          ctx.fillText(text, labelX, 0);
+        }
 
-        ctx.restore(); // Restore original state
+        ctx.restore();
       }
     }
   })
