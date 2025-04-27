@@ -284,8 +284,9 @@
     // document.getElementById('popupImage').src = `someDynamicImagePath/${node.name}.jpg`;
 
     document.getElementById('infoPopup').style.display = 'block';
-  })
-  // Disable auto-zoom by simulating a manual zoom
+  });
+
+  // 👇 **Important: AFTER Graph is fully created**
   setTimeout(() => {
     Graph.d3Zoom().translateBy(Graph.d3ForceLayout(), 0.1, 0.1);
   }, 0);
