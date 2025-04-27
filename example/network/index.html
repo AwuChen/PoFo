@@ -382,7 +382,7 @@
     const centerNode = filteredNodes.find(n => n.id === centerNodeId);
     if (centerNode) {
       Graph.centerAt(centerNode.x, centerNode.y, 0); // (x, y, ms transition duration)
-      Graph.zoom(0.6, 0); // Keep zoom at 1x (or whatever zoom you prefer)
+      Graph.zoom(0.7, 0); // Keep zoom at 1x (or whatever zoom you prefer)
     }
 
       // Populate entity list for selected category
@@ -424,7 +424,7 @@
           const centerNode = filteredNodes.find(n => n.id === centerNodeId);
           if (centerNode) {
             Graph.centerAt(centerNode.x, centerNode.y, 0);
-            Graph.zoom(0.6, 0);
+            Graph.zoom(0.7, 0);
           }
         };
 
