@@ -152,7 +152,7 @@
     const angle = (2 * Math.PI * index) / entities.length;
     let lastNodeId = centerNodeId;
 
-    entity.impacts.forEach(impact => {
+    entity.impacts.forEach((impact, i, arr) => {
       const ringIndex = impactRingMap[impact] ?? 0;
       const radius = baseRadius + ringIndex * ringSpacing;
       const x = radius * Math.cos(angle);
@@ -179,44 +179,11 @@
 
       lastNodeId = thisNodeId;
 
-      // Add invisible tip node extending the radial line
-      let finalX, finalY;
-
-      entity.impacts.forEach(impact => {
-        const ringIndex = impactRingMap[impact] ?? 0;
-        const radius = baseRadius + ringIndex * ringSpacing;
-        const x = radius * Math.cos(angle);
-        const y = radius * Math.sin(angle);
-
-        const thisNodeId = nodeId++;
-        nodes.push({
-          id: thisNodeId,
-          fx: x,
-          fy: y,
-          name: entity.name,
-          categories: entity.categories,
-          impact: impact,
-          radialIndex: index,
-          size: 6,
-          color: ringColors[ringIndex % ringColors.length]
-        });
-
-        links.push({
-          source: lastNodeId,
-          target: thisNodeId,
-          radialIndex: index
-        });
-
-        lastNodeId = thisNodeId;
-        finalX = x;
-        finalY = y;
-      });
-
-      // Add invisible tip node just beyond last node
-      if (finalX !== undefined && finalY !== undefined) {
-        const extensionFactor = 1.15; // slightly beyond
-        const tipX = finalX * extensionFactor;
-        const tipY = finalY * extensionFactor;
+      // ---- After last impact, add a tip node for label ----
+      if (i === arr.length - 1) {
+        const extensionFactor = 1.15;
+        const tipX = x * extensionFactor;
+        const tipY = y * extensionFactor;
 
         const tipNodeId = nodeId++;
         nodes.push({
@@ -224,9 +191,11 @@
           fx: tipX,
           fy: tipY,
           radialIndex: index,
-          size: 0.1, // almost invisible
-          color: 'rgba(0,0,0,0)', // fully transparent
-          name: null
+          size: 0.1, // invisible dot
+          color: 'rgba(0,0,0,0)', // transparent
+          name: entity.name, // name attached here!
+          categories: entity.categories,
+          impact: impact
         });
 
         links.push({
