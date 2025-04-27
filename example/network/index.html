@@ -285,7 +285,7 @@
 
     document.getElementById('infoPopup').style.display = 'block';
   })
-
+  // Disable auto-zoom by simulating a manual zoom
   setTimeout(() => {
     Graph.d3Zoom().translateBy(Graph.d3ForceLayout(), 0.1, 0.1);
   }, 0);
