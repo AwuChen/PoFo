@@ -243,9 +243,6 @@
   .graphData(gData)
   .enableNodeDrag(false)
   .linkDirectionalParticles(0)
-  .onEngineStop(() => {
-    // Do nothing to prevent auto-zoom
-  })
   .linkWidth(() => 0.5)
   .linkColor(() => '#000000')
   .nodeCanvasObject((node, ctx, globalScale) => {
@@ -288,6 +285,10 @@
 
     document.getElementById('infoPopup').style.display = 'block';
   })
+
+  setTimeout(() => {
+    Graph.d3Zoom().translateBy(Graph.d3ForceLayout(), 0.1, 0.1);
+  }, 0);
 
     // Filters UI
   const allCategories = [...new Set(entities.flatMap(e => e.categories))];
