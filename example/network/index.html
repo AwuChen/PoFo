@@ -267,6 +267,26 @@
         ctx.fill();
       }
     })
+  .linkCanvasObject((link, ctx, globalScale) => {
+    const start = link.source;
+    const end = link.target;
+
+    if (typeof start !== 'object' || typeof end !== 'object') return;
+
+    const label = link.name || '';
+
+    if (!label) return;
+
+    const fontSize = 12 / globalScale;
+    ctx.font = `${fontSize}px Sans-Serif`;
+    ctx.fillStyle = '#555';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    const offset = 4;
+    ctx.fillText(label, end.x + offset, end.y);
+  })
+  .linkCanvasObjectMode(() => 'after')
   .nodeLabel(node => node.name || '')
   .onNodeClick(node => {
 
