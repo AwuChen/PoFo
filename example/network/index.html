@@ -243,6 +243,9 @@
   .graphData(gData)
   .enableNodeDrag(false)
   .linkDirectionalParticles(0)
+  .onEngineStop(() => {
+    // Do nothing to prevent auto-zoom
+  });
   .linkWidth(() => 0.5)
   .linkColor(() => '#000000')
   .nodeCanvasObject((node, ctx, globalScale) => {
