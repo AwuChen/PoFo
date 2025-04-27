@@ -380,10 +380,10 @@
 
     // Prevent auto zoom by re-centering manually
     const centerNode = filteredNodes.find(n => n.id === centerNodeId);
-    if (centerNode) {
+    /*if (centerNode) {
       Graph.centerAt(centerNode.x, centerNode.y, 0); // (x, y, ms transition duration)
       Graph.zoom(1, 0); // Keep zoom at 1x (or whatever zoom you prefer)
-    }
+    }*/
 
       // Populate entity list for selected category
     const entityListContainer = document.getElementById('entityList');
@@ -421,11 +421,11 @@
 
           Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
 
-          const centerNode = filteredNodes.find(n => n.id === centerNodeId);
+          /*const centerNode = filteredNodes.find(n => n.id === centerNodeId);
           if (centerNode) {
             Graph.centerAt(centerNode.x, centerNode.y, 0);
-            Graph.zoom(1, 0);
-          }
+            Graph.zoom(0.6, 0);
+          }*/
         };
 
         entityListContainer.appendChild(item);
@@ -485,13 +485,6 @@
         }));
 
       Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
-
-      // Center graph on first visible node
-      const mainNode = filteredNodes.find(n => n.name === name);
-      if (mainNode) {
-        Graph.centerAt(mainNode.fx, mainNode.fy, 1000);
-        Graph.zoom(2, 1000);
-      }
 
       // Show info popup
       showInfoPopup(targetEntity);
