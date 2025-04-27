@@ -287,7 +287,7 @@
     const offset = 4;
     ctx.fillText(label, end.x + offset, end.y);
   })
-  .linkCanvasObjectMode(() => 'after'); // Make sure labels are drawn AFTER links
+  .linkCanvasObjectMode(() => 'after') // Make sure labels are drawn AFTER links
 
   .nodeLabel(node => node.name || '')
   .onNodeClick(node => {
