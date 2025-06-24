@@ -14,6 +14,8 @@
       font-family: sans-serif;
       max-height: 90vh;
       overflow-y: auto;
+      background-color: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(4px);
     }
     #controls h3 {
       margin-top: 10px;
@@ -23,14 +25,12 @@
       font-size: 16px;
       margin: 4px 0;
       cursor: pointer;
-      color: #999;
+      color: #777;
       font-weight: bold;
       transition: color 0.2s;
     }
-
     .filter-item.active {
       color: #000;
-      padding: 2px 6px;
     }
     #entityList {
       position: absolute;
@@ -39,6 +39,11 @@
       max-height: 90vh;
       overflow-y: auto;
       display: none; /* hidden by default */
+      background-color: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(4px);
+      padding: 8px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     #entityList div {
       cursor: pointer;
@@ -46,9 +51,12 @@
       color: #444;
       font-weight: 500;
       font-size: 15px;
+      padding: 4px 8px;
+      border-radius: 4px;
     }
     #entityList div:hover {
       color: #000;
+      background-color: #eee;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
@@ -78,10 +86,12 @@
   ">
   <strong id="popupName"></strong><br>
   <span id="popupCategory"></span><br>
-  <span id="popupImpact"></span><br><br>
+  <span id="popupImpacts"></span><br><br>
   <img id="popupImage" src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184727-O47THN4VEAP4S1WAEAML/image+%2819%29.png" style="width:100%; border-radius:6px; margin-top:10px;" />
 </div>
+
 <script>
+  // --- DATA & CONFIG ---
   const entities = [
     { name: 'URF / TX The BOX', categories: ['Investment'], impacts: ['Retail'] },
     { name: 'SAUVEREIGN', categories: ['Investment'], impacts: ['Branding', 'Retail'] },
@@ -125,393 +135,269 @@
     { name: 'SOTHEBYS AUCTION HOUSE, INTL REALTY', categories: ['Yesteryears'], impacts: ['Branding'] }
   ];
 
-  const impactRingMap = {
-    'Strategy.Culture': 0,
-    'Branding': 1,
-    'Retail': 2,
-    'East.West': 3,
-    'Edu.Learning.Collective': 4,
-    'Creative Solution': 5
-  };
+  const impactRingMap = new Map([
+    ['Strategy.Culture', 0], ['Branding', 1], ['Retail', 2],
+    ['East.West', 3], ['Edu.Learning.Collective', 4], ['Creative Solution', 5]
+  ]);
 
   const ringSpacing = 80;
   const baseRadius = 100;
   const ringColors = ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b', '#8ecae6'];
   const maxLayers = 6;
 
-  let nodeId = 0;
-  const nodes = [], links = [];
+  // --- OPTIMIZATION: Centralized state for filters ---
+  const activeFilters = {
+    category: null,
+    impacts: new Set()
+  };
 
-  const centerNodeId = nodeId++;
-  nodes.push({ id: centerNodeId, fx: 0, fy: 0, size: 4, color: '#000000' });
+  // --- PREPARE GRAPH DATA (Done only once) ---
+  const nodes = [];
+  const links = [];
+  let nodeIdCounter = 0;
+
+  const centerNode = { id: nodeIdCounter++, fx: 0, fy: 0, size: 4, color: '#000000', visible: true };
+  nodes.push(centerNode);
 
   entities.forEach((entity, index) => {
-
-    entity.radialIndex = index; // <- Add this line
-
+    entity.radialIndex = index; // Assign a unique index to each entity's spoke
     const angle = (2 * Math.PI * index) / entities.length;
-    let lastNodeId = centerNodeId;
+    let lastNodeId = centerNode.id;
 
     entity.impacts.forEach((impact, i, arr) => {
-      const ringIndex = impactRingMap[impact] ?? 0;
+      const ringIndex = impactRingMap.get(impact) ?? 0;
       const radius = baseRadius + ringIndex * ringSpacing;
       const x = radius * Math.cos(angle);
       const y = radius * Math.sin(angle);
 
-      const thisNodeId = nodeId++;
-      nodes.push({
-        id: thisNodeId,
-        fx: x,
-        fy: y,
-        name: entity.name,
-        categories: entity.categories,
-        impact: impact,
+      const node = {
+        id: nodeIdCounter++,
+        fx: x, fy: y,
+        name: entity.name, categories: entity.categories, impact: impact,
+        impacts: entity.impacts, // Add all impacts for the popup
         radialIndex: index,
         size: 6,
-        color: ringColors[ringIndex % ringColors.length]
-      });
+        color: ringColors[ringIndex % ringColors.length],
+        visible: true // Add visibility flag
+      };
+      nodes.push(node);
+      links.push({ source: lastNodeId, target: node.id, radialIndex: index, visible: true });
+      lastNodeId = node.id;
 
-      links.push({
-        source: lastNodeId,
-        target: thisNodeId,
-        radialIndex: index
-      });
-
-      lastNodeId = thisNodeId;
-
-      // ---- After last impact, add a tip node for label ----
-      if (i === arr.length - 1) {
-        const extensionFactor = 1.15;
-        const tipX = x * extensionFactor;
-        const tipY = y * extensionFactor;
-
-        const tipNodeId = nodeId++;
-        nodes.push({
-          id: tipNodeId,
-          fx: tipX,
-          fy: tipY,
+      if (i === arr.length - 1) { // Tip node for label
+        const tipNode = {
+          id: nodeIdCounter++,
+          fx: x * 1.15, fy: y * 1.15,
+          name: entity.name, categories: entity.categories, impact: impact,
+          impacts: entity.impacts,
           radialIndex: index,
-          size: 0.1, // invisible dot
-          color: 'rgba(0,0,0,0)', // transparent
-          name: entity.name, // name attached here!
-          categories: entity.categories,
-          impact: impact
-        });
-
-        links.push({
-          source: lastNodeId,
-          target: tipNodeId,
-          radialIndex: index
-        });
+          size: 0.1, color: 'rgba(0,0,0,0)', visible: true
+        };
+        nodes.push(tipNode);
+        links.push({ source: lastNodeId, target: tipNode.id, radialIndex: index, visible: true });
       }
     });
   });
 
   const gData = { nodes, links };
+
+  // --- INITIALIZE GRAPH ---
   const Graph = ForceGraph()(document.getElementById('graph'))
-  .graphData(gData)
-  .enableNodeDrag(false)
-  .linkDirectionalParticles(0)
-  .linkWidth(() => 0.5)
-  .linkColor(() => '#000000')
-  .nodeCanvasObject((node, ctx, globalScale) => {
-    if (node.id === centerNodeId) {
-      // Draw concentric rings around center
-      ctx.save();
-      ctx.translate(node.x, node.y);
+    .graphData(gData)
+    .enableNodeDrag(false)
+    .linkWidth(0.5)
+    .linkColor(() => '#000000')
+    // --- OPTIMIZATION: Use visibility methods ---
+    .nodeVisibility(node => node.visible)
+    .linkVisibility(link => link.visible)
+    .nodeCanvasObject(drawNode) // Use a dedicated drawing function for clarity
+    .onNodeClick(handleNodeClick);
+
+  // --- UI & FILTERING LOGIC ---
+  const categoryFiltersEl = document.getElementById('categoryFilters');
+  const impactFiltersEl = document.getElementById('impactFilters');
+  const entityListEl = document.getElementById('entityList');
+  const infoPopupEl = document.getElementById('infoPopup');
+
+  function setupFilters() {
+    const allCategories = [...new Set(entities.flatMap(e => e.categories))];
+    const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
+
+    allCategories.forEach(category => {
+      const item = document.createElement('div');
+      item.className = 'filter-item';
+      item.textContent = category;
+      item.dataset.value = category;
+      item.onclick = (e) => handleCategoryClick(e.target, category);
+      categoryFiltersEl.appendChild(item);
+    });
+
+    allImpacts.forEach(impact => {
+      const item = document.createElement('div');
+      item.className = 'filter-item';
+      item.textContent = impact;
+      item.dataset.value = impact;
+      item.onclick = (e) => handleImpactClick(e.target, impact);
+      impactFiltersEl.appendChild(item);
+    });
+  }
+
+  function handleCategoryClick(element, category) {
+    const isDeselecting = activeFilters.category === category;
+    
+    // Deactivate all other category buttons
+    document.querySelectorAll('#categoryFilters .filter-item').forEach(el => el.classList.remove('active'));
+    
+    if (isDeselecting) {
+      activeFilters.category = null;
+      hideEntityList();
+    } else {
+      activeFilters.category = category;
+      element.classList.add('active');
+      showEntityList(category, element);
+    }
+    updateGraphVisibility();
+  }
+
+  function handleImpactClick(element, impact) {
+    element.classList.toggle('active');
+    if (activeFilters.impacts.has(impact)) {
+      activeFilters.impacts.delete(impact);
+    } else {
+      activeFilters.impacts.add(impact);
+    }
+    updateGraphVisibility();
+  }
+  
+  function updateGraphVisibility() {
+    const { category, impacts } = activeFilters;
+    
+    const radialToInclude = new Set();
+    
+    // If no filters, show all
+    if (!category && impacts.size === 0) {
+      gData.nodes.forEach(n => n.visible = true);
+      gData.links.forEach(l => l.visible = true);
+    } else {
+      // Determine which entity spokes to show
+      entities.forEach(entity => {
+        const catMatch = !category || entity.categories.includes(category);
+        const impactMatch = impacts.size === 0 || entity.impacts.some(imp => impacts.has(imp));
+        if (catMatch && impactMatch) {
+          radialToInclude.add(entity.radialIndex);
+        }
+      });
+      
+      gData.nodes.forEach(n => {
+        n.visible = n.id === centerNode.id || radialToInclude.has(n.radialIndex);
+      });
+      gData.links.forEach(l => {
+        l.visible = radialToInclude.has(l.radialIndex);
+      });
+    }
+
+    // Trigger a graph refresh to apply visibility changes
+    Graph.nodeVisibility(Graph.nodeVisibility()).linkVisibility(Graph.linkVisibility());
+  }
+
+  function filterToEntity(entity) {
+    gData.nodes.forEach(n => {
+        n.visible = n.id === centerNode.id || n.radialIndex === entity.radialIndex;
+    });
+    gData.links.forEach(l => {
+        l.visible = l.radialIndex === entity.radialIndex;
+    });
+    Graph.nodeVisibility(Graph.nodeVisibility()).linkVisibility(Graph.linkVisibility());
+    hideEntityList();
+    showInfoPopup(entity);
+  }
+  
+  // --- UI HELPER FUNCTIONS ---
+  function showEntityList(category, clickedElement) {
+    const matchingEntities = entities.filter(e => e.categories.includes(category));
+    entityListEl.innerHTML = '';
+    
+    matchingEntities.forEach(entity => {
+      const el = document.createElement('div');
+      el.textContent = entity.name;
+      el.onclick = () => filterToEntity(entity);
+      entityListEl.appendChild(el);
+    });
+
+    const rect = clickedElement.getBoundingClientRect();
+    entityListEl.style.left = `${rect.right + 10}px`;
+    entityListEl.style.top = `${rect.top + window.scrollY}px`;
+    entityListEl.style.display = 'block';
+  }
+
+  function hideEntityList() {
+    entityListEl.style.display = 'none';
+  }
+
+  function handleNodeClick(node) {
+    if (!node.name) return;
+    const entity = entities.find(e => e.name === node.name);
+    if (entity) {
+      showInfoPopup(entity);
+    }
+  }
+
+  function showInfoPopup(entity) {
+    infoPopupEl.style.display = 'block';
+    document.getElementById('popupName').textContent = entity.name;
+    document.getElementById('popupCategory').textContent = `Category: ${entity.categories.join(', ')}`;
+    // Use the full impact list for the popup
+    document.getElementById('popupImpacts').textContent = `Impacts: ${entity.impacts.join(', ')}`;
+  }
+  
+  // Close info popup when clicking outside of it or a node
+  document.addEventListener('click', (event) => {
+    if (infoPopupEl.style.display === 'block' && !infoPopupEl.contains(event.target) && !event.target.closest('canvas')) {
+      infoPopupEl.style.display = 'none';
+    }
+  }, true);
+
+  // --- CUSTOM DRAWING ---
+  function drawNode(node, ctx) {
+    if (node.id === centerNode.id) {
+      // Draw concentric rings
       ctx.strokeStyle = '#ddd';
       ctx.lineWidth = 1;
       for (let i = 0; i < maxLayers; i++) {
         ctx.beginPath();
-        ctx.arc(0, 0, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+        ctx.arc(node.x, node.y, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
         ctx.stroke();
       }
-      ctx.restore();
     } else {
       // Draw normal node
-      const size = node.size || 4;
       ctx.beginPath();
-      ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
+      ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
       ctx.fillStyle = node.color || '#666';
       ctx.fill();
 
+      // Draw label on tip nodes
       if (node.size <= 0.1 && node.name) {
         const { fx, fy } = node;
         const angle = Math.atan2(fy, fx);
-        const nodeRadius = 5; // Approximate radius
-        const gap = 5; // Spacing
-        const padding = 4;
         const text = node.name;
-
+        
         ctx.save();
-
         ctx.translate(fx, fy);
-        const flip = (angle > Math.PI/2 || angle < -Math.PI/2);
-        ctx.rotate(flip ? angle + Math.PI : angle);
-
+        const isFlipped = (angle > Math.PI / 2 || angle < -Math.PI / 2);
+        ctx.rotate(isFlipped ? angle + Math.PI : angle);
+        ctx.textAlign = isFlipped ? 'right' : 'left';
         ctx.font = '10px sans-serif';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#000';
-        ctx.strokeStyle = '#000';
-
-        const textWidth = ctx.measureText(text).width;
-
-        const labelX = nodeRadius + gap;
-
-        if (flip) {
-          // If flipped, align text to the right and move labelX negatively
-          ctx.textAlign = 'right';
-          
-          // Draw the box to the left
-          ctx.strokeRect(-labelX - textWidth - padding, -10/2 - padding/2, textWidth + 2*padding, 10 + padding);
-          
-          // Draw the text to the left
-          ctx.fillText(text, -labelX, 0);
-        } else {
-          ctx.textAlign = 'left';
-          
-          ctx.strokeRect(labelX - padding, -10/2 - padding/2, textWidth + 2*padding, 10 + padding);
-          
-          ctx.fillText(text, labelX, 0);
-        }
-
+        ctx.fillText(text, isFlipped ? -10 : 10, 0);
         ctx.restore();
       }
     }
-  })
-  .nodeLabel(node => node.name || '')
-  .onNodeClick(node => {
-
-    if (window.event) {
-      window.event.stopPropagation();
-    }
-
-    if (!node.name) return;
-
-    document.getElementById('popupName').textContent = node.name;
-    document.getElementById('popupCategory').textContent = `Category: ${node.categories.join(', ')}`;
-    document.getElementById('popupImpact').textContent = `Impact: ${node.impact}`;
-
-    // Optionally customize the image URL based on the node name
-    // document.getElementById('popupImage').src = `someDynamicImagePath/${node.name}.jpg`;
-
-    document.getElementById('infoPopup').style.display = 'block';
-  })
-
-    // Filters UI
-  const allCategories = [...new Set(entities.flatMap(e => e.categories))];
-  const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
-
-  function createCheckbox(filterType, value) {
-    const label = document.createElement('label');
-    label.style.display = 'block';
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.value = value;
-    checkbox.name = filterType;
-    checkbox.onchange = applyFilters;
-    label.appendChild(checkbox);
-    label.appendChild(document.createTextNode(' ' + value));
-    return label;
   }
+  
+  // --- INITIALIZE ---
+  setupFilters();
 
-  function createFilterList(containerId, filterType, values) {
-    const container = document.getElementById(containerId);
-    values.forEach(value => {
-      const item = document.createElement('div');
-      item.className = 'filter-item';
-      item.textContent = value;
-      item.dataset.type = filterType;
-      item.dataset.value = value;
-      item.onclick = (e) => {
-        const type = item.dataset.type;
-
-        if (type === 'category') {
-          const allCategoryItems = document.querySelectorAll('.filter-item[data-type="category"]');
-          const isActive = item.classList.contains('active');
-
-            // Clear all active categories
-          allCategoryItems.forEach(el => el.classList.remove('active'));
-
-          if (!isActive) {
-            item.classList.add('active');
-            showEntityList(item.dataset.value, item, e);
-          } else {
-            hideEntityList();
-          }
-        } else if (type === 'impact') {
-            // Just toggle this one impact item
-          item.classList.toggle('active');
-        }
-
-        applyFilters();
-      };
-      container.appendChild(item);
-    });
-  }
-
-  createFilterList('categoryFilters', 'category', allCategories);
-  createFilterList('impactFilters', 'impact', allImpacts);
-
-
-  function getActiveFilters(type) {
-    return [...document.querySelectorAll(`.filter-item.active[data-type="${type}"]`)]
-    .map(el => el.dataset.value);
-  }
-
-  function applyFilters() {
-    const selectedCategories = getActiveFilters('category');
-    const selectedImpacts = getActiveFilters('impact');
-
-    const radialToInclude = new Set();
-
-    nodes.forEach(n => {
-      if (!n.name) return;
-      const catMatch = selectedCategories.length === 0 || selectedCategories.some(cat => n.categories.includes(cat));
-      const impMatch = selectedImpacts.length === 0 || selectedImpacts.includes(n.impact);
-      if (catMatch && impMatch) {
-        radialToInclude.add(n.radialIndex);
-      }
-    });
-
-    const filteredNodes = nodes.filter(n =>
-      n.id === centerNodeId || (n.radialIndex !== undefined && radialToInclude.has(n.radialIndex))
-      );
-
-    const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
-
-    const filteredLinks = links
-    .filter(link => nodeMap.has(link.source.id ?? link.source) && nodeMap.has(link.target.id ?? link.target))
-    .map(link => ({
-      source: nodeMap.get(link.source.id ?? link.source),
-      target: nodeMap.get(link.target.id ?? link.target),
-      radialIndex: link.radialIndex
-    }));
-
-    Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
-
-    // Prevent auto zoom by re-centering manually
-    const centerNode = filteredNodes.find(n => n.id === centerNodeId);
-    if (centerNode) {
-      Graph.centerAt(centerNode.x, centerNode.y, 0); // (x, y, ms transition duration)
-      Graph.zoom(0.7, 0); // Keep zoom at 1x (or whatever zoom you prefer)
-    }
-
-      // Populate entity list for selected category
-    const entityListContainer = document.getElementById('entityList');
-    entityListContainer.innerHTML = '';
-
-    if (selectedCategories.length === 1 && selectedImpacts.length === 0) {
-      const selectedCategory = selectedCategories[0];
-      const matchingEntities = entities
-      .filter(e => e.categories.includes(selectedCategory))
-      .map(e => e.name);
-
-      matchingEntities.forEach(name => {
-        const item = document.createElement('div');
-        item.className = 'entity-item';
-        item.textContent = name;
-
-        item.onclick = () => {
-          const entityRadialIndex = nodes.find(n => n.name === name)?.radialIndex;
-          if (entityRadialIndex === undefined) return;
-
-          const filteredNodes = nodes.filter(n =>
-            n.id === centerNodeId || n.radialIndex === entityRadialIndex
-            );
-          const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
-          const filteredLinks = links
-          .filter(link =>
-            nodeMap.has(link.source.id ?? link.source) &&
-            nodeMap.has(link.target.id ?? link.target)
-            )
-          .map(link => ({
-            source: nodeMap.get(link.source.id ?? link.source),
-            target: nodeMap.get(link.target.id ?? link.target),
-            radialIndex: link.radialIndex
-          }));
-
-          Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
-
-          const centerNode = filteredNodes.find(n => n.id === centerNodeId);
-          if (centerNode) {
-            Graph.centerAt(centerNode.x, centerNode.y, 0);
-            Graph.zoom(0.7, 0);
-          }
-        };
-
-        entityListContainer.appendChild(item);
-      });
-
-      entityListContainer.style.display = 'block';
-    } else {
-      entityListContainer.style.display = 'none';
-    }  
-  }
-  function showEntityList(category, clickedElement, event) {
-    const matchingEntities = entities.filter(e => e.categories.includes(category));
-    const entityListEl = document.getElementById('entityList');
-      entityListEl.innerHTML = ''; // clear previous
-
-      matchingEntities.forEach(entity => {
-        const el = document.createElement('div');
-        el.textContent = entity.name;
-        el.onclick = () => {
-          filterToEntity(entity.name);
-        };
-        entityListEl.appendChild(el);
-      });
-
-      // Position to the right of clicked category
-      const rect = clickedElement.getBoundingClientRect();
-      entityListEl.style.left = `${rect.right + 10}px`;
-      entityListEl.style.top = `${rect.top + window.scrollY}px`;
-      entityListEl.style.display = 'block';
-    }
-
-    function hideEntityList() {
-      const entityListEl = document.getElementById('entityList');
-      entityListEl.style.display = 'none';
-    }
-
-    function filterToEntity(name) {
-      const targetEntity = entities.find(e => e.name === name);
-      if (!targetEntity) return;
-
-      const radialIndexSet = new Set([targetEntity.radialIndex]);
-
-      const filteredNodes = nodes.filter(n =>
-        n.id === centerNodeId || (n.radialIndex !== undefined && radialIndexSet.has(n.radialIndex))
-      );
-
-      const nodeMap = new Map(filteredNodes.map(n => [n.id, n]));
-      const filteredLinks = links
-        .filter(link =>
-          nodeMap.has(link.source.id ?? link.source) &&
-          nodeMap.has(link.target.id ?? link.target)
-        )
-        .map(link => ({
-          source: nodeMap.get(link.source.id ?? link.source),
-          target: nodeMap.get(link.target.id ?? link.target),
-          radialIndex: link.radialIndex
-        }));
-
-      Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
-
-      // Show info popup
-      showInfoPopup(targetEntity);
-    }
-
-    // Close info popup when clicking outside
-    document.addEventListener('click', function(event) {
-      const popup = document.getElementById('infoPopup');
-      
-      // If popup is visible and click is outside popup
-      if (popup.style.display === 'block' && !popup.contains(event.target)) {
-        popup.style.display = 'none';
-      }
-    });
-
-  </script>
+</script>
 </body>
 </html>
