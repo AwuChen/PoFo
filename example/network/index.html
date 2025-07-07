@@ -83,14 +83,69 @@
 </div>
 <script>
   const entities = [
-    { name: 'URF / TX The BOX', categories: ['Investment'], impacts: ['Retail'] },
-    { name: 'SAUVEREIGN', categories: ['Investment'], impacts: ['Branding', 'Retail'] },
-    { name: 'DONGHAI', categories: ['Investment'], impacts: ['East.West', 'Edu.Learning.Collective'] },
-    { name: 'EASTERN SEAS', categories: ['Investment'], impacts: ['Creative Solution'] },
-    { name: 'DANDELION', categories: ['Investment'], impacts: ['Strategy.Culture', 'Edu.Learning.Collective'] },
-    { name: 'BILI Q', categories: ['Investment'], impacts: ['East.West'] },
-    { name: 'KYOTO ART BANK', categories: ['Investment'], impacts: ['Culture', 'Creative Solution'] },
-    { name: 'ARAMIS WINES', categories: ['Investment'], impacts: ['Branding'] },
+    {
+      name: 'URF / TX The BOX',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'Strategy.Culture', size: 'medium' },
+        { name: 'Creative Solution', size: 'small' },
+        { name: 'Branding', size: 'small' },
+        { name: 'Retail', size: 'large' }
+      ]
+    },
+    {
+      name: 'SAUVEREIGN',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'Branding', size: 'medium' },
+        { name: 'Retail', size: 'small' }
+      ]
+    },
+    {
+      name: 'DONGHAI',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'East.West', size: 'medium' },
+        { name: 'Edu.Learning.Collective', size: 'small' }
+      ]
+    },
+    {
+      name: 'EASTERN SEAS',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'Creative Solution', size: 'medium' }
+      ]
+    },
+    {
+      name: 'DANDELION',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'Strategy.Culture', size: 'small' },
+        { name: 'Edu.Learning.Collective', size: 'medium' }
+      ]
+    },
+    {
+      name: 'BILI Q',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'East.West', size: 'medium' }
+      ]
+    },
+    {
+      name: 'KYOTO ART BANK',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'Culture', size: 'medium' },
+        { name: 'Creative Solution', size: 'small' }
+      ]
+    },
+    {
+      name: 'ARAMIS WINES',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'Branding', size: 'medium' }
+      ]
+    },
     { name: 'SEIICHI MIZUNO', categories: ['Forces'], impacts: ['Retail'] },
     { name: 'MARIO TESTINO', categories: ['Forces'], impacts: ['Branding', 'Retail'] },
     { name: 'JUDY DOBIAS', categories: ['Forces'], impacts: ['East.West', 'Edu.Learning.Collective'] },
@@ -125,6 +180,13 @@
     { name: 'SOTHEBYS AUCTION HOUSE, INTL REALTY', categories: ['Yesteryears'], impacts: ['Branding'] }
   ];
 
+  // For backward compatibility, convert old impacts array to new format if needed
+  entities.forEach(entity => {
+    if (entity.impacts.length && typeof entity.impacts[0] === 'string') {
+      entity.impacts = entity.impacts.map(impact => ({ name: impact, size: 'medium' }));
+    }
+  });
+
   const impactRingMap = {
     'Strategy.Culture': 0,
     'Branding': 1,
@@ -132,6 +194,12 @@
     'East.West': 3,
     'Edu.Learning.Collective': 4,
     'Creative Solution': 5
+  };
+
+  const impactSizeMap = {
+    small: 4,
+    medium: 8,
+    large: 14
   };
 
   const ringSpacing = 80;
@@ -146,13 +214,14 @@
   nodes.push({ id: centerNodeId, fx: 0, fy: 0, size: 4, color: '#000000' });
 
   entities.forEach((entity, index) => {
-
     entity.radialIndex = index; // <- Add this line
-
     const angle = (2 * Math.PI * index) / entities.length;
     let lastNodeId = centerNodeId;
 
-    entity.impacts.forEach((impact, i, arr) => {
+    entity.impacts.forEach((impactObj, i, arr) => {
+      const impact = impactObj.name;
+      const sizeLabel = impactObj.size || 'medium';
+      const nodeSize = impactSizeMap[sizeLabel] || 8;
       const ringIndex = impactRingMap[impact] ?? 0;
       const radius = baseRadius + ringIndex * ringSpacing;
       const x = radius * Math.cos(angle);
@@ -167,7 +236,7 @@
         categories: entity.categories,
         impact: impact,
         radialIndex: index,
-        size: 6,
+        size: nodeSize,
         color: ringColors[ringIndex % ringColors.length]
       });
 
@@ -300,7 +369,7 @@
 
     // Filters UI
   const allCategories = [...new Set(entities.flatMap(e => e.categories))];
-  const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
+  const allImpacts = [...new Set(entities.flatMap(e => e.impacts.map(i => i.name)))]
 
   function createCheckbox(filterType, value) {
     const label = document.createElement('label');
