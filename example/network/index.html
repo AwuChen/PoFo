@@ -93,7 +93,16 @@
 <script>
   // --- DATA & CONFIG ---
   const entities = [
-    { name: 'URF / TX The BOX', categories: ['Investment'], impacts: ['Retail'] },
+    {
+      name: 'URF / TX THE BOX',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'Branding', size: 'S' },
+        { name: 'Retail. Curation', size: 'L' }
+      ]
+    },
     { name: 'SAUVEREIGN', categories: ['Investment'], impacts: ['Branding', 'Retail'] },
     { name: 'DONGHAI', categories: ['Investment'], impacts: ['East.West', 'Edu.Learning.Collective'] },
     { name: 'EASTERN SEAS', categories: ['Investment'], impacts: ['Creative Solution'] },
@@ -135,10 +144,28 @@
     { name: 'SOTHEBYS AUCTION HOUSE, INTL REALTY', categories: ['Yesteryears'], impacts: ['Branding'] }
   ];
 
-  const impactRingMap = new Map([
-    ['Strategy.Culture', 0], ['Branding', 1], ['Retail', 2],
-    ['East.West', 3], ['Edu.Learning.Collective', 4], ['Creative Solution', 5]
-  ]);
+  // For backward compatibility, convert old impacts array to new format if needed
+  entities.forEach(entity => {
+    if (entity.impacts.length && typeof entity.impacts[0] === 'string') {
+      entity.impacts = entity.impacts.map(impact => ({ name: impact, size: 'M' }));
+    }
+  });
+
+  const impactRingMap = {
+    'Strategy. Culture': 0,
+    'Branding': 1,
+    'Retail. Curation': 2,
+    'East. West': 3,
+    'Edu. Learning': 4,
+    'Creative Solution': 5
+  };
+
+  // S, M, L size mapping
+  const impactSizeMap = {
+    S: 4,
+    M: 8,
+    L: 14
+  };
 
   const ringSpacing = 80;
   const baseRadius = 100;
@@ -164,8 +191,11 @@
     const angle = (2 * Math.PI * index) / entities.length;
     let lastNodeId = centerNode.id;
 
-    entity.impacts.forEach((impact, i, arr) => {
-      const ringIndex = impactRingMap.get(impact) ?? 0;
+    entity.impacts.forEach((impactObj, i, arr) => {
+      const impact = impactObj.name;
+      const sizeLabel = impactObj.size || 'M';
+      const nodeSize = impactSizeMap[sizeLabel] || 8;
+      const ringIndex = impactRingMap[impact] ?? 0;
       const radius = baseRadius + ringIndex * ringSpacing;
       const x = radius * Math.cos(angle);
       const y = radius * Math.sin(angle);
@@ -174,9 +204,8 @@
         id: nodeIdCounter++,
         fx: x, fy: y,
         name: entity.name, categories: entity.categories, impact: impact,
-        impacts: entity.impacts, // Add all impacts for the popup
         radialIndex: index,
-        size: 6,
+        size: nodeSize,
         color: ringColors[ringIndex % ringColors.length],
         visible: true // Add visibility flag
       };
@@ -189,7 +218,6 @@
           id: nodeIdCounter++,
           fx: x * 1.15, fy: y * 1.15,
           name: entity.name, categories: entity.categories, impact: impact,
-          impacts: entity.impacts,
           radialIndex: index,
           size: 0.1, color: 'rgba(0,0,0,0)', visible: true
         };
@@ -221,7 +249,7 @@
 
   function setupFilters() {
     const allCategories = [...new Set(entities.flatMap(e => e.categories))];
-    const allImpacts = [...new Set(entities.flatMap(e => e.impacts))];
+    const allImpacts = [...new Set(entities.flatMap(e => e.impacts.map(i => i.name)))];
 
     allCategories.forEach(category => {
       const item = document.createElement('div');
@@ -282,7 +310,7 @@
       // Determine which entity spokes to show
       entities.forEach(entity => {
         const catMatch = !category || entity.categories.includes(category);
-        const impactMatch = impacts.size === 0 || entity.impacts.some(imp => impacts.has(imp));
+        const impactMatch = impacts.size === 0 || entity.impacts.some(imp => impacts.has(imp.name));
         if (catMatch && impactMatch) {
           radialToInclude.add(entity.radialIndex);
         }
@@ -347,7 +375,7 @@
     document.getElementById('popupName').textContent = entity.name;
     document.getElementById('popupCategory').textContent = `Category: ${entity.categories.join(', ')}`;
     // Use the full impact list for the popup
-    document.getElementById('popupImpacts').textContent = `Impacts: ${entity.impacts.join(', ')}`;
+    document.getElementById('popupImpacts').textContent = `Impacts: ${entity.impacts.map(i => i.name).join(', ')}`;
   }
   
   // Close info popup when clicking outside of it or a node
