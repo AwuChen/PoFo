@@ -667,9 +667,33 @@
   const centerNode = { id: nodeIdCounter++, fx: 0, fy: 0, size: 4, color: '#000000', visible: true };
   nodes.push(centerNode);
 
-  entities.forEach((entity, index) => {
+  // Reorganize entities to spread categories across the circle
+  const categoryGroups = {};
+  entities.forEach(entity => {
+    entity.categories.forEach(category => {
+      if (!categoryGroups[category]) {
+        categoryGroups[category] = [];
+      }
+      categoryGroups[category].push(entity);
+    });
+  });
+
+  // Interleave entities from different categories
+  const reorganizedEntities = [];
+  const categories = Object.keys(categoryGroups);
+  const maxLength = Math.max(...categories.map(cat => categoryGroups[cat].length));
+  
+  for (let i = 0; i < maxLength; i++) {
+    categories.forEach(category => {
+      if (categoryGroups[category][i]) {
+        reorganizedEntities.push(categoryGroups[category][i]);
+      }
+    });
+  }
+
+  reorganizedEntities.forEach((entity, index) => {
     entity.radialIndex = index; // Assign a unique index to each entity's spoke
-    const angle = (2 * Math.PI * index) / entities.length;
+    const angle = (2 * Math.PI * index) / reorganizedEntities.length;
     let lastNodeId = centerNode.id;
 
     entity.impacts.forEach((impactObj, i, arr) => {
