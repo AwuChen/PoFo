@@ -30,6 +30,20 @@
       overflow-y: auto;
       background-color: transparent;
     }
+    
+    .filter-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .connector-line {
+      width: 1px;
+      height: 200px;
+      background-color: #000;
+      margin-top: 20px;
+    }
     #controls h3 {
       margin-top: 20px;
       margin-bottom: 15px;
@@ -40,35 +54,40 @@
       cursor: pointer;
       color: #777;
       font-weight: bold;
-      transition: color 0.2s;
+      transition: all 0.2s;
       font-family: 'Akkurat', sans-serif;
+      text-transform: uppercase;
+      padding: 8px 12px;
+      border-radius: 4px;
     }
+    
     .filter-item.active {
-      color: #000;
+      color: #fff;
+      background-color: #333;
     }
+
     #entityList {
-      position: absolute;
       font-family: sans-serif;
-      z-index: 11;
       max-height: 90vh;
       overflow-y: auto;
       display: none; /* hidden by default */
       background-color: transparent;
       padding: 8px;
       border-radius: 6px;
+      min-width: 200px;
     }
     #entityList div {
       cursor: pointer;
       margin: 4px 0;
-      color: #444;
-      font-weight: 500;
-      font-size: 15px;
-      padding: 4px 8px;
-      border-radius: 4px;
+      color: #000;
+      font-weight: normal;
+      font-size: 14px;
+      padding: 4px 0;
+      text-transform: uppercase;
+      font-family: 'Akkurat', sans-serif;
     }
     #entityList div:hover {
-      color: #000;
-      background-color: #eee;
+      color: #333;
     }
     
     #logo {
@@ -132,11 +151,14 @@
   </div>
   <div id="controls">
     <h3>PORTFOLIO & CATEGORIES</h3>
-    <div id="categoryFilters"></div>
+    <div class="filter-container">
+      <div id="categoryFilters"></div>
+      <div class="connector-line"></div>
+      <div id="entityList"></div>
+    </div>
     <h3>APPROACH & IMPACT</h3>
     <div id="impactFilters"></div>
   </div>
-  <div id="entityList"></div>
   <div id="graph"></div>
   <div id="infoPopup" style="
   position: absolute;
@@ -733,9 +755,6 @@
       entityListEl.appendChild(el);
     });
 
-    const rect = clickedElement.getBoundingClientRect();
-    entityListEl.style.left = `${rect.right + 10}px`;
-    entityListEl.style.top = `${rect.top + window.scrollY}px`;
     entityListEl.style.display = 'block';
   }
 
