@@ -864,9 +864,9 @@
     document.getElementById('popupImpacts').textContent = entity.impacts.map(i => i.name).join(', ');
   }
   
-  // Close info popup when clicking outside of it or a node
+  // Close info popup when clicking outside of it
   document.addEventListener('click', (event) => {
-    if (infoPopupEl.style.display === 'block' && !infoPopupEl.contains(event.target) && !event.target.closest('canvas')) {
+    if (infoPopupEl.style.display === 'block' && !infoPopupEl.contains(event.target)) {
       infoPopupEl.style.display = 'none';
     }
   }, true);
