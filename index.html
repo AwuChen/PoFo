@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    @font-face {
+      font-family: 'Akkurat';
+      src: url('../../fonts/AkkuratMonoTrialTT-Regular.ttf') format('ttf');
+      font-weight: normal;
+      font-style: normal;
+    }
+    
+    @font-face {
+      font-family: 'Akkurat';
+      src: url('../../fonts/AkkuratTrialTT-Bold.ttf') format('ttf');
+      font-weight: bold;
+      font-style: normal;
+    }
+    
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; position: absolute; top: 0; left: 0; z-index: 0; }
+    #controls {
+      position: absolute;
+      top: 150px;
+      left: 40px;
+      z-index: 10;
+      padding: 20px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      max-height: 90vh;
+      overflow-y: auto;
+      background-color: transparent;
+    }
+    
+    .filter-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .connector-line {
+      width: 1px;
+      height: 200px;
+      background-color: #000;
+      margin-top: 20px;
+    }
+    #controls h3 {
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+    .filter-item {
+      font-size: 14px;
+      margin: 4px 0;
+      cursor: pointer;
+      color: #777;
+      font-weight: bold;
+      transition: all 0.2s;
+      font-family: 'Akkurat', sans-serif;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 4px;
+    }
+    
+    .filter-item.active {
+      color: #fff;
+      background-color: #333;
+    }
+
+    #entityList {
+      font-family: sans-serif;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: none; /* hidden by default */
+      background-color: transparent;
+      padding: 8px;
+      border-radius: 6px;
+      min-width: 200px;
+    }
+    #entityList div {
+      cursor: pointer;
+      margin: 2px 0;
+      color: #000;
+      font-weight: normal;
+      font-size: 14px;
+      padding: 2px 0;
+      text-transform: uppercase;
+      font-family: 'Akkurat', sans-serif;
+    }
+    #entityList div:hover {
+      color: #333;
+    }
+    
+    #logo {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      z-index: 15;
+    }
+    
+    #logo img {
+      max-height: 60px;
+      width: auto;
+      border-radius: 4px;
+    }
+    
+    #heading {
+      position: absolute;
+      top: 40px;
+      right: 30px;
+      z-index: 15;
+      max-width: 350px;
+      text-align: left;
+    }
+    
+    #heading h1 {
+      font-family: 'Akkurat', sans-serif;
+      font-size: 36px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #000;
+      margin: 0 0 35px 0;
+      line-height: 1.1;
+      letter-spacing: 1px;
+    }
+    
+    #heading p {
+      font-family: 'Akkurat', sans-serif;
+      font-size: 12px;
+      font-weight: normal;
+      color: #666;
+      margin: 10px 0 12px 0;
+      line-height: 1.5;
+      max-width: 700px;
+      padding-left: 40px;
+    }
+    
+    .indented {
+      padding-left: 40px;
+    }
+    
+    #infoPopup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 1px solid #000;
+      border-radius: 12px;
+      padding: 30px;
+      font-family: 'Akkurat', sans-serif;
+      display: none;
+      z-index: 20;
+      width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 25px;
+    }
+    
+    .popup-title h2 {
+      font-size: 24px;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: #000;
+      margin: 0 0 5px 0;
+      line-height: 1.2;
+    }
+    
+    .popup-title p {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+      font-weight: normal;
+    }
+    
+    .popup-category {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      font-weight: normal;
+    }
+    
+    .popup-description {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    
+    .popup-images {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 8px;
+      height: 300px;
+    }
+    
+    .popup-images img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+      filter: grayscale(100%);
+    }
+    
+    .popup-images img:first-child {
+      grid-row: 1 / 3;
+      grid-column: 1;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/force-graph"></script>
+</head>
+<body>
+  <div id="logo">
+    <img src="../../logos/pofo_logo.png" alt="PoFo Logo" />
+  </div>
+  <div id="heading">
+    <h1>CULTURAL<br>BRANDING<br><span class="indented">STRATEGISTS</span></h1>
+    <p>Shaping identities, designing systems, inspiring connections. Crafting meaningful brand narratives that bridge and cross cultures, identities, and strategic visions.</p>
+    <p>Drawing from our lifelong exposures to global cultural, social and economic phenomenons.</p>
+  </div>
+  <div id="controls">
+    <h3>PORTFOLIO & CATEGORIES</h3>
+    <div class="filter-container">
+      <div id="categoryFilters"></div>
+      <div class="connector-line"></div>
+      <div id="entityList"></div>
+    </div>
+    <h3>APPROACH & IMPACT</h3>
+    <div id="impactFilters"></div>
+  </div>
+  <div id="graph"></div>
+  <div id="infoPopup">
+    <div class="popup-header">
+      <div class="popup-title">
+        <h2 id="popupName"></h2>
+        <p id="popupSubtitle"></p>
+      </div>
+      <div class="popup-category">
+        <span id="popupCategory"></span>
+      </div>
+    </div>
+    <div class="popup-content">
+      <div class="popup-description">
+        <span id="popupImpacts"></span>
+      </div>
+      <div class="popup-images">
+        <img id="popupImage1" src="https://media.gettyimages.com/id/109350127/photo/computer-screens-in-control-room.jpg?b=1&s=612x612&w=0&k=20&c=FuJWt-U5XU5efm_8zCQxa37FH3wna48Gs-_QIlC7Cuo%3D" />
+        <img id="popupImage2" src="https://media.gettyimages.com/id/80087958/photo/man-holding-tiny-violin-close-up-of-hands.jpg?b=1&s=612x612&w=0&k=20&c=KloovwZpoHedjNQfE_VL3JQiLPTCHPfrA4G8L0uNiF4%3D" />
+        <img id="popupImage3" src="https://media.gettyimages.com/id/185321343/photo/brandeburg-gate.jpg?b=1&s=612x612&w=0&k=20&c=0a8VpTEzg-oRGcWL2-nk1KVt0SiIxCXP9QZJ9IRUfXo%3D" />
+        <img id="popupImage4" src="https://media.gettyimages.com/id/483752415/photo/taj-mahal-mosque-india.jpg?b=1&s=612x612&w=0&k=20&c=Kq2NTVGhOIa3Q1gqQvjdRJDJAUEPRIOjH2apBIOdrFA%3D" />
+        <img id="popupImage5" src="https://media.gettyimages.com/id/471926619/photo/moraine-lake-at-sunrise-banff-national-park-canada.jpg?b=1&s=612x612&w=0&k=20&c=2hAm_2t11vIKzxnun_7QublTBhTiDBWjRwSIUAt7NZc%3D" />
+      </div>
+    </div>
+  </div>
+
+<script>
+  // --- DATA & CONFIG ---
+  const entities = [
+    {
+      name: 'URF / TX THE BOX',
+      categories: ['Investment'],
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'Branding', size: 'S' },
+        { name: 'Retail. Curation', size: 'L' }
+      ]
+    },
+    { 
+      name: 'SAUVEREIGN', 
+      categories: ['Investment'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Branding', size: 'M' },
+        { name: 'Retail. Curation', size: 'S' }
+      ] 
+    },
+    { 
+      name: 'DONGHAI', 
+      categories: ['Investment'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'Branding', size: 'M' }
+      ] 
+    },
+    { 
+      name: 'EASTERN SEAS', 
+      categories: ['Investment'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'Branding', size: 'M' }
+      ] 
+    },
+    { 
+      name: 'DANDELION', 
+      categories: ['Investment'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Creative Solution', size: 'L' },
+        { name: 'Retail. Curation', size: 'S' }
+      ] 
+    },
+    { 
+      name: 'BILI Q', 
+      categories: ['Investment'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'Branding', size: 'M' }
+      ] 
+    },
+    { 
+      name: 'KYOTO ART BANK', 
+      categories: ['Investment'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'Retail. Curation', size: 'M' }
+      ] 
+    },
+    { 
+      name: 'SYSTEM SYSTEM', 
+      categories: ['Investment'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'M' },
+        { name: 'Retail. Curation', size: 'S' }
+      ] 
+    },
+    { 
+      name: 'SEIICHI MIZUNO', 
+      categories: ['Forces'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Branding', size: 'S' },
+        { name: 'Retail. Curation', size: 'M' }
+      ] 
+    },
+    { 
+      name: 'TRAUB NY', 
+      categories: ['Forces'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Branding', size: 'M' },
+        { name: 'Retail. Curation', size: 'S' }
+      ] 
+    },
+    { 
+      name: 'THE CROSSES', 
+      categories: ['Forces'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Branding', size: 'M' },
+        { name: 'Retail. Curation', size: 'S' }
+      ] 
+    },
+    { 
+      name: 'SUNTCHI', 
+      categories: ['Forces'], 
+      impacts: [
+
+      ] 
+    },
+    { 
+      name: 'SHANGHAI INDUSTRIAL MUSEUM', 
+      categories: ['Consultancies'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Branding', size: 'M' },
+        { name: 'Retail. Curation', size: 'S' },
+        { name: 'East. West', size: 'L' }        
+      ] 
+    },
+    { 
+      name: 'HONG KONG JOCKEY CLUB', 
+      categories: ['Consultancies'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'M' },
+        { name: 'East. West', size: 'S' }
+      ] 
+    },
+    { 
+      name: 'MOLESKINE', 
+      categories: ['Consultancies'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'M' },
+        { name: 'Branding', size: 'M' },
+        { name: 'East. West', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'LUXEMBOURG', 
+      categories: ['Cities.culture.art'], 
+      impacts: [
+        { name: 'Branding', size: 'S' },
+        { name: 'East. West', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'DANISH DESIGN AWARD', 
+      categories: ['Cities.culture.art'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'East. West', size: 'M' },
+        { name: 'Edu. Learning', size: 'S' }
+      ] 
+    },
+    { 
+      name: 'TONGJI UNIV. design & innovation', 
+      categories: ['Cities.culture.art'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Edu. Learning', size: 'L' },
+        { name: 'East. West', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'WORLD DESIGN CAPITAL', 
+      categories: ['Cities.culture.art'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Branding', size: 'S' },
+        { name: 'East. West', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'UNIVERSITY COLLABORATIONS', 
+      categories: ['Cities.culture.art'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'East. West', size: 'L' },
+        { name: 'Edu. Learning', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'CONFUCIUS SECONDARY SCHOOL', 
+      categories: ['Cities.culture.art'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Branding', size: 'S' },
+        { name: 'East. West', size: 'L' },
+        { name: 'Edu. Learning', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'ZENG FANZHI', 
+      categories: ['Cities.culture.art'], 
+      impacts: [
+        { name: 'East. West'}
+      ] 
+    },
+    { 
+      name: 'TED / TEDX', 
+      categories: ['Ecosystems'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'East. West', size: 'L' },
+        { name: 'Edu. Learning', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'pan asia network', 
+      categories: ['Ecosystems'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'M' },
+        { name: 'East. West', size: 'L' },
+        { name: 'Edu. Learning', size: 'S' }
+      ] 
+    },
+    { 
+      name: 'alter projects', 
+      categories: ['Ecosystems'], 
+      impacts: [
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'East. West', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'suzhou co-art lab', 
+      categories: ['Ecosystems'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Creative Solution', size: 'M' },
+        { name: 'East. West', size: 'L' },
+        { name: 'Edu. Learning', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'asia-europe design alliance', 
+      categories: ['Ecosystems'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Branding', size: 'S' },
+        { name: 'East. West', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'REFLEX GROUP', 
+      categories: ['Ecosystems'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'S' },
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'East. West', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'burning man', 
+      categories: ['Ecosystems'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'East. West', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'earth one', 
+      categories: ['Ecosystems'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'East. West', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'bloomingdale\s', 
+      categories: ['Yesterdays'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'M' },
+        { name: 'Branding', size: 'S' },
+        { name: 'Retail. Curation', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'THE NEW YORK TIMES', 
+      categories: ['Yesterdays'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'S' },
+        { name: 'Creative Solution', size: 'I' }
+      ] 
+    },
+    { 
+      name: 'isetan', 
+      categories: ['Yesterdays'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'L' },
+        { name: 'Branding', size: 'L' },
+        { name: 'Retail. Curation', size: 'L' },
+        { name: 'East. West', size: 'M' }
+      ] 
+    },
+    { 
+      name: 'sotheby\'s auction, intl realty', 
+      categories: ['Yesterdays'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Branding', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'adidas, republic of sports', 
+      categories: ['Yesterdays'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Creative Solution', size: 'L' },
+        { name: 'Edu. Learning', size: 'M' }
+      ] 
+    },
+    { 
+      name: 'URBAN ARCH bi-city biennale HK/SZ', 
+      categories: ['Yesterdays'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Branding', size: 'M' },
+        { name: 'Retail. Curation', size: 'L' },
+        { name: 'East. West', size: 'M' },
+        { name: 'Edu. Learning', size: 'M' }
+      ] 
+    },
+    { 
+      name: 'PENANG INSTITUTE / think city', 
+      categories: ['Yesterdays'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'M' },
+        { name: 'Creative Solution', size: 'S' },
+        { name: 'Edu. Learning', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'YUAN MUSEUM beijing', 
+      categories: ['Yesterdays'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' }
+      ] 
+    },
+    { 
+      name: 'FORBIDDEN PALACE beijing', 
+      categories: ['Yesterdays'], 
+      impacts: [
+        { name: 'Strategy. Culture', size: 'L' },
+        { name: 'Creative Solution', size: 'M' }
+      ] 
+    },
+    { 
+      name: 'SMILE ANGEL FOUNDATION', 
+      categories: ['Foundation'], 
+      impacts: [
+        { name: 'Creative Solution', size: 'M' },
+        { name: 'Branding', size: 'S' },
+        { name: 'Edu. Learning', size: 'L' }
+      ] 
+    },
+    
+  ];
+
+  // For backward compatibility, convert old impacts array to new format if needed
+  entities.forEach(entity => {
+    if (entity.impacts.length && typeof entity.impacts[0] === 'string') {
+      entity.impacts = entity.impacts.map(impact => ({ name: impact, size: 'M' }));
+    }
+  });
+
+  const impactRingMap = {
+    'Strategy. Culture': 0,
+    'Creative Solution': 1,
+    'Branding': 2,
+    'Retail. Curation': 3,
+    'East. West': 4,
+    'Edu. Learning': 5
+  };
+
+  // S, M, L size mapping
+  const impactSizeMap = {
+    S: 4,
+    M: 8,
+    L: 14
+  };
+
+  const ringSpacing = 80;
+  const baseRadius = 100;
+  const ringColors = ['#bc6c25', '#606c38', '#283618', '#dda15e', '#7b7b7b', '#8ecae6'];
+  const maxLayers = 6;
+
+  // --- OPTIMIZATION: Centralized state for filters ---
+  const activeFilters = {
+    category: null,
+    impacts: new Set()
+  };
+
+  // --- PREPARE GRAPH DATA (Done only once) ---
+  const nodes = [];
+  const links = [];
+  let nodeIdCounter = 0;
+
+  const centerNode = { id: nodeIdCounter++, fx: 0, fy: 0, size: 4, color: '#000000', visible: true };
+  nodes.push(centerNode);
+
+  // Reorganize entities to spread categories across the circle
+  const categoryGroups = {};
+  entities.forEach(entity => {
+    entity.categories.forEach(category => {
+      if (!categoryGroups[category]) {
+        categoryGroups[category] = [];
+      }
+      categoryGroups[category].push(entity);
+    });
+  });
+
+  // Interleave entities from different categories
+  const reorganizedEntities = [];
+  const categories = Object.keys(categoryGroups);
+  const maxLength = Math.max(...categories.map(cat => categoryGroups[cat].length));
+  
+  for (let i = 0; i < maxLength; i++) {
+    categories.forEach(category => {
+      if (categoryGroups[category][i]) {
+        reorganizedEntities.push(categoryGroups[category][i]);
+      }
+    });
+  }
+
+  reorganizedEntities.forEach((entity, index) => {
+    entity.radialIndex = index; // Assign a unique index to each entity's spoke
+    const angle = (2 * Math.PI * index) / reorganizedEntities.length;
+    let lastNodeId = centerNode.id;
+
+    entity.impacts.forEach((impactObj, i, arr) => {
+      const impact = impactObj.name;
+      const sizeLabel = impactObj.size || 'M';
+      const nodeSize = impactSizeMap[sizeLabel] || 8;
+      const ringIndex = impactRingMap[impact] ?? 0;
+      const radius = baseRadius + ringIndex * ringSpacing;
+      const x = radius * Math.cos(angle);
+      const y = radius * Math.sin(angle);
+
+      const node = {
+        id: nodeIdCounter++,
+        fx: x, fy: y,
+        name: entity.name, categories: entity.categories, impact: impact,
+        radialIndex: index,
+        size: nodeSize,
+        color: ringColors[ringIndex % ringColors.length],
+        visible: true // Add visibility flag
+      };
+      nodes.push(node);
+      links.push({ source: lastNodeId, target: node.id, radialIndex: index, visible: true });
+      lastNodeId = node.id;
+
+      if (i === arr.length - 1) { // Tip node for label
+        const tipNode = {
+          id: nodeIdCounter++,
+          fx: x * 1.15, fy: y * 1.15,
+          name: entity.name, categories: entity.categories, impact: impact,
+          radialIndex: index,
+          size: 0.1, color: 'rgba(0,0,0,0)', visible: true
+        };
+        nodes.push(tipNode);
+        links.push({ source: lastNodeId, target: tipNode.id, radialIndex: index, visible: true });
+      }
+    });
+  });
+
+  const gData = { nodes, links };
+
+  // --- INITIALIZE GRAPH ---
+  const Graph = ForceGraph()(document.getElementById('graph'))
+    .graphData(gData)
+    .enableNodeDrag(false)
+    .linkWidth(0.5)
+    .linkColor(() => '#000000')
+    // --- OPTIMIZATION: Use visibility methods ---
+    .nodeVisibility(node => node.visible)
+    .linkVisibility(link => link.visible)
+    .nodeCanvasObject(drawNode) // Use a dedicated drawing function for clarity
+    .onNodeClick(handleNodeClick)
+    .zoom(0.6)
+    .centerAt(0, 0, 1000);
+
+  // --- UI & FILTERING LOGIC ---
+  const categoryFiltersEl = document.getElementById('categoryFilters');
+  const impactFiltersEl = document.getElementById('impactFilters');
+  const entityListEl = document.getElementById('entityList');
+  const infoPopupEl = document.getElementById('infoPopup');
+
+  function setupFilters() {
+    const allCategories = [...new Set(entities.flatMap(e => e.categories))];
+    const allImpacts = [...new Set(entities.flatMap(e => e.impacts.map(i => i.name)))];
+
+    allCategories.forEach(category => {
+      const item = document.createElement('div');
+      item.className = 'filter-item';
+      item.textContent = category;
+      item.dataset.value = category;
+      item.onclick = (e) => handleCategoryClick(e.target, category);
+      categoryFiltersEl.appendChild(item);
+    });
+
+    allImpacts.forEach(impact => {
+      const item = document.createElement('div');
+      item.className = 'filter-item';
+      item.textContent = impact;
+      item.dataset.value = impact;
+      item.onclick = (e) => handleImpactClick(e.target, impact);
+      impactFiltersEl.appendChild(item);
+    });
+  }
+
+  function handleCategoryClick(element, category) {
+    const isDeselecting = activeFilters.category === category;
+    
+    // Deactivate all other category buttons
+    document.querySelectorAll('#categoryFilters .filter-item').forEach(el => el.classList.remove('active'));
+    
+    if (isDeselecting) {
+      activeFilters.category = null;
+      hideEntityList();
+    } else {
+      activeFilters.category = category;
+      element.classList.add('active');
+      showEntityList(category, element);
+    }
+    updateGraphVisibility();
+  }
+
+  function handleImpactClick(element, impact) {
+    element.classList.toggle('active');
+    if (activeFilters.impacts.has(impact)) {
+      activeFilters.impacts.delete(impact);
+    } else {
+      activeFilters.impacts.add(impact);
+    }
+    updateGraphVisibility();
+  }
+  
+  function updateGraphVisibility() {
+    const { category, impacts } = activeFilters;
+    
+    const radialToInclude = new Set();
+    
+    // If no filters, show all
+    if (!category && impacts.size === 0) {
+      gData.nodes.forEach(n => n.visible = true);
+      gData.links.forEach(l => l.visible = true);
+    } else {
+      // Determine which entity spokes to show
+      entities.forEach(entity => {
+        const catMatch = !category || entity.categories.includes(category);
+        const impactMatch = impacts.size === 0 || entity.impacts.some(imp => impacts.has(imp.name));
+        if (catMatch && impactMatch) {
+          radialToInclude.add(entity.radialIndex);
+        }
+      });
+      
+      gData.nodes.forEach(n => {
+        n.visible = n.id === centerNode.id || radialToInclude.has(n.radialIndex);
+      });
+      gData.links.forEach(l => {
+        l.visible = radialToInclude.has(l.radialIndex);
+      });
+    }
+
+    // Trigger a graph refresh to apply visibility changes
+    Graph.nodeVisibility(Graph.nodeVisibility()).linkVisibility(Graph.linkVisibility());
+  }
+
+  function filterToEntity(entity) {
+    gData.nodes.forEach(n => {
+        n.visible = n.id === centerNode.id || n.radialIndex === entity.radialIndex;
+    });
+    gData.links.forEach(l => {
+        l.visible = l.radialIndex === entity.radialIndex;
+    });
+    Graph.nodeVisibility(Graph.nodeVisibility()).linkVisibility(Graph.linkVisibility());
+    hideEntityList();
+    showInfoPopup(entity);
+  }
+  
+  // --- UI HELPER FUNCTIONS ---
+  function showEntityList(category, clickedElement) {
+    const matchingEntities = entities.filter(e => e.categories.includes(category));
+    entityListEl.innerHTML = '';
+    
+    matchingEntities.forEach(entity => {
+      const el = document.createElement('div');
+      el.textContent = entity.name;
+      el.onclick = () => filterToEntity(entity);
+      entityListEl.appendChild(el);
+    });
+
+    entityListEl.style.display = 'block';
+  }
+
+  function hideEntityList() {
+    entityListEl.style.display = 'none';
+  }
+
+  function handleNodeClick(node) {
+    if (!node.name) return;
+    const entity = entities.find(e => e.name === node.name);
+    if (entity) {
+      showInfoPopup(entity);
+    }
+  }
+
+  function showInfoPopup(entity) {
+    infoPopupEl.style.display = 'block';
+    
+    // Split entity name for title (assuming format like "YUAN MUSEUM BEIJING")
+    const nameParts = entity.name.split(' ');
+    const title = nameParts.slice(0, -1).join(' ');
+    const location = nameParts[nameParts.length - 1];
+    
+    document.getElementById('popupName').textContent = title;
+    document.getElementById('popupSubtitle').textContent = location;
+    document.getElementById('popupCategory').textContent = entity.categories.join('.');
+    document.getElementById('popupImpacts').textContent = entity.impacts.map(i => i.name).join(', ');
+  }
+  
+  // Close info popup when clicking outside of it
+  document.addEventListener('click', (event) => {
+    if (infoPopupEl.style.display === 'block' && !infoPopupEl.contains(event.target)) {
+      infoPopupEl.style.display = 'none';
+    }
+  }, true);
+
+  // --- CUSTOM DRAWING ---
+  function drawNode(node, ctx) {
+    if (node.id === centerNode.id) {
+      // Draw concentric rings
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < maxLayers; i++) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+    } else {
+      // Draw normal node
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, node.size, 0, 2 * Math.PI, false);
+      ctx.fillStyle = node.color || '#666';
+      ctx.fill();
+
+      // Draw label on tip nodes
+      if (node.size <= 0.1 && node.name) {
+        const { fx, fy } = node;
+        const angle = Math.atan2(fy, fx);
+        const text = node.name;
+        
+        ctx.save();
+        ctx.translate(fx, fy);
+        const isFlipped = (angle > Math.PI / 2 || angle < -Math.PI / 2);
+        ctx.rotate(isFlipped ? angle + Math.PI : angle);
+        ctx.textAlign = isFlipped ? 'right' : 'left';
+        ctx.font = '10px sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#000';
+        ctx.fillText(text, isFlipped ? -10 : 10, 0);
+        ctx.restore();
+      }
+    }
+  }
+  
+  // --- INITIALIZE ---
+  setupFilters();
+
+</script>
+</body>
+</html>
