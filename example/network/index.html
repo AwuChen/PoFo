@@ -114,7 +114,7 @@
       color: #666;
       margin: 10px 0 12px 0;
       line-height: 1.5;
-      max-width: 300px;
+      max-width: 700px;
       padding-left: 40px;
     }
     
@@ -621,7 +621,9 @@
     .nodeVisibility(node => node.visible)
     .linkVisibility(link => link.visible)
     .nodeCanvasObject(drawNode) // Use a dedicated drawing function for clarity
-    .onNodeClick(handleNodeClick);
+    .onNodeClick(handleNodeClick)
+    .zoom(0.6)
+    .centerAt(0, 0, 1000);
 
   // --- UI & FILTERING LOGIC ---
   const categoryFiltersEl = document.getElementById('categoryFilters');
