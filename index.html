@@ -41,12 +41,11 @@
     
     .category-connector {
       position: absolute;
-      left: 180px;
       top: 50%;
       width: 0;
       height: 1px;
       background-color: #000;
-      transition: width 0.3s ease;
+      transition: all 0.3s ease;
       z-index: 1;
     }
     
@@ -817,7 +816,30 @@
       showEntityList(category, element);
       // Show connector line
       if (connector) {
-        connector.style.width = '200px';
+        // Calculate the position and width dynamically
+        const categoryFilters = document.getElementById('categoryFilters');
+        const entityList = document.getElementById('entityList');
+        
+        if (categoryFilters && entityList) {
+          const categoryRect = categoryFilters.getBoundingClientRect();
+          const entityRect = entityList.getBoundingClientRect();
+          const containerRect = document.querySelector('.filter-container').getBoundingClientRect();
+          
+          // Position line at the right edge of category filters
+          const startX = categoryRect.right - containerRect.left;
+          connector.style.left = startX + 'px';
+          
+          // Position line at the center of the selected category item
+          const selectedItem = element;
+          const itemRect = selectedItem.getBoundingClientRect();
+          const itemCenterY = itemRect.top + itemRect.height / 2 - containerRect.top;
+          connector.style.top = itemCenterY + 'px';
+          
+          // Width extends to the left edge of entity list
+          const endX = entityRect.left - containerRect.left;
+          const width = endX - startX;
+          connector.style.width = width + 'px';
+        }
       }
     }
     updateGraphVisibility();
