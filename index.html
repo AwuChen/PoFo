@@ -79,15 +79,19 @@
     #entityList div {
       cursor: pointer;
       margin: 2px 0;
-      color: #000;
+      color: #999;
       font-weight: normal;
       font-size: 14px;
       padding: 2px 0;
       text-transform: uppercase;
       font-family: 'Akkurat', sans-serif;
+      transition: color 0.2s;
     }
     #entityList div:hover {
-      color: #333;
+      color: #666;
+    }
+    #entityList div.selected {
+      color: #000;
     }
     
     #logo {
@@ -839,6 +843,17 @@
   }
 
   function filterToEntity(entity) {
+    // Remove selected class from all entity list items
+    document.querySelectorAll('#entityList div').forEach(el => {
+      el.classList.remove('selected');
+    });
+    
+    // Add selected class to the clicked entity
+    const entityElement = Array.from(document.querySelectorAll('#entityList div')).find(el => el.textContent === entity.name);
+    if (entityElement) {
+      entityElement.classList.add('selected');
+    }
+    
     gData.nodes.forEach(n => {
         n.visible = n.id === centerNode.id || n.radialIndex === entity.radialIndex;
     });
@@ -846,8 +861,6 @@
         l.visible = l.radialIndex === entity.radialIndex;
     });
     Graph.nodeVisibility(Graph.nodeVisibility()).linkVisibility(Graph.linkVisibility());
-    hideEntityList();
-    showInfoPopup(entity);
   }
   
   // --- UI HELPER FUNCTIONS ---
