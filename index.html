@@ -169,6 +169,8 @@
       max-height: 80vh;
       overflow-y: auto;
       box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      cursor: move;
+      user-select: none;
     }
     
     .popup-header {
@@ -955,6 +957,44 @@
     document.getElementById('popupImpacts').textContent = entity.impacts.map(i => i.name).join(', ');
   }
   
+  // Draggable popup functionality
+  let isDragging = false;
+  let dragOffset = { x: 0, y: 0 };
+
+  infoPopupEl.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    const rect = infoPopupEl.getBoundingClientRect();
+    dragOffset.x = e.clientX - rect.left;
+    dragOffset.y = e.clientY - rect.top;
+    infoPopupEl.style.cursor = 'grabbing';
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      const x = e.clientX - dragOffset.x;
+      const y = e.clientY - dragOffset.y;
+      
+      // Keep popup within viewport bounds
+      const rect = infoPopupEl.getBoundingClientRect();
+      const maxX = window.innerWidth - rect.width;
+      const maxY = window.innerHeight - rect.height;
+      
+      const boundedX = Math.max(0, Math.min(x, maxX));
+      const boundedY = Math.max(0, Math.min(y, maxY));
+      
+      infoPopupEl.style.left = boundedX + 'px';
+      infoPopupEl.style.top = boundedY + 'px';
+      infoPopupEl.style.transform = 'none';
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      infoPopupEl.style.cursor = 'move';
+    }
+  });
+
   // Close info popup when clicking outside of it
   document.addEventListener('click', (event) => {
     if (infoPopupEl.style.display === 'block' && !infoPopupEl.contains(event.target)) {
