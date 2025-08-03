@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PoFo – Cultural Branding Strategists</title>
   <style>
+    @font-face {
+      font-family: 'Akkurat';
+      src: url('../../fonts/AkkuratTrialTT-Thin.ttf') format('ttf');
+      font-weight: normal;
+      font-style: normal;
+    }
+    
+    @font-face {
+      font-family: 'Akkurat';
+      src: url('../../fonts/AkkuratTrialTT-Bold.ttf') format('ttf');
+      font-weight: normal;
+      font-style: normal;
+    }
+    
     body {
       margin: 0;
       font-family: 'Helvetica Neue', sans-serif;
@@ -12,26 +26,55 @@
       color: #222;
     }
 
-    .top-section {
-      padding: 60px 40px 30px 40px;
-      background-color: white;
+    #logo {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+      z-index: 15;
     }
-
-    .top-section h1 {
+    
+    #logo img {
+      max-height: 90px;
+      width: auto;
+      border-radius: 4px;
+    }
+    
+    #heading {
+      position: absolute;
+      top: 40px;
+      right: 30px;
+      z-index: 15;
+      max-width: 350px;
+      text-align: left;
+    }
+    
+    #heading h1 {
+      font-family: 'Akkurat', sans-serif;
       font-size: 36px;
-      margin-bottom: 10px;
+      font-weight: normal;
+      text-transform: uppercase;
+      color: #000;
+      margin: 0 0 35px 0;
+      line-height: 1.1;
+      letter-spacing: 1px;
+    }
+    
+    #heading p {
+      font-family: 'Akkurat', sans-serif;
+      font-size: 12px;
+      font-weight: normal;
+      color: #666;
+      margin: 10px 0 12px 0;
+      line-height: 1.5;
+      max-width: 700px;
+      padding-left: 40px;
+    }
+    
+    .indented {
+      padding-left: 40px;
     }
 
-    .top-section h2 {
-      font-size: 22px;
-      margin-bottom: 20px;
-    }
 
-    .top-section p {
-      max-width: 800px;
-      font-size: 16px;
-      line-height: 1.6;
-    }
 
     .theme-selector {
       margin: 20px 40px;
@@ -52,10 +95,146 @@
       background: #0077cc;
     }
 
+    #controls {
+      position: absolute;
+      top: 150px;
+      left: 40px;
+      z-index: 10;
+      padding: 20px;
+      border-radius: 8px;
+      font-family: 'Akkurat', sans-serif;
+      max-height: 90vh;
+      overflow-y: auto;
+      background-color: transparent;
+    }
+    
+    .filter-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    
+    .category-connector {
+      position: absolute;
+      top: 50%;
+      width: 0;
+      height: 1px;
+      background-color: #000;
+      transition: width 0.3s ease;
+      z-index: 1;
+    }
+    
+    #controls h3 {
+      margin-top: 15px;
+      margin-bottom: 10px;
+      font-family: 'Akkurat', sans-serif;
+      font-weight: normal;
+      font-size: 20px;
+      text-transform: uppercase;
+      color: #000;
+    }
+    
+    #impressionHeading {
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    
+    #impressionHeading:hover {
+      color: #666;
+    }
+    
+    #impressionHeading.active {
+      color: #333;
+    }
+    
+    .impression-filters {
+      margin-top: 10px;
+    }
+    
+    #impressionSubFilters {
+      font-family: 'Akkurat', sans-serif;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: none; /* hidden by default */
+      background-color: transparent;
+      padding: 8px;
+      border-radius: 6px;
+      min-width: 200px;
+    }
+    
+    #impressionSubFilters div {
+      cursor: pointer;
+      margin: 2px 0;
+      color: #999;
+      font-weight: normal;
+      font-size: 14px;
+      padding: 2px 0;
+      text-transform: uppercase;
+      font-family: 'Akkurat', sans-serif;
+      transition: color 0.2s;
+    }
+    
+    #impressionSubFilters div:hover {
+      color: #666;
+    }
+    
+    #impressionSubFilters div.selected {
+      color: #000;
+    }
+    
+    .filter-item {
+      font-size: 14px;
+      margin: 4px 0;
+      cursor: pointer;
+      color: #777;
+      font-weight: normal;
+      transition: all 0.2s;
+      font-family: 'Akkurat', sans-serif;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 4px;
+    }
+    
+
+
+    #entityList {
+      font-family: 'Akkurat', sans-serif;
+      max-height: 90vh;
+      overflow-y: auto;
+      display: none; /* hidden by default */
+      background-color: transparent;
+      padding: 8px;
+      border-radius: 6px;
+      min-width: 200px;
+    }
+    
+    #entityList div {
+      cursor: pointer;
+      margin: 2px 0;
+      color: #999;
+      font-weight: normal;
+      font-size: 14px;
+      padding: 2px 0;
+      text-transform: uppercase;
+      font-family: 'Akkurat', sans-serif;
+      transition: color 0.2s;
+    }
+    
+    #entityList div:hover {
+      color: #666;
+    }
+    
+    #entityList div.selected {
+      color: #000;
+    }
+
     .collage {
       column-count: 7; /* You can adjust this for different screen sizes */
       column-gap: var(--gap);
       padding: var(--gap);
+      margin-top: 400px; /* Add space to prevent overlap with controls */
     }
 
     .collage img {
@@ -82,26 +261,36 @@
   </style>
 </head>
 <body>
-
-  <div class="top-section">
-    <h1>PoFo &mdash; Poetic Force</h1>
-    <h2>Cultural Branding Strategists</h2>
-    <p>
-      Shaping identities, designing systems, inspiring connections. Crafting meaningful brand narratives that bridge and cross cultures, identities, and strategic visions.
-      Drawing from our lifelong exposures to global cultural, social and economic phenomenons.
-    </p>
+  <div id="logo">
+    <img src="../../logos/pofo_logo.png" alt="PoFo Logo" />
+  </div>
+  <div id="heading">
+    <h1>CULTURAL<br>BRANDING<br><span class="indented">STRATEGISTS</span></h1>
+    <p>Shaping identities, designing systems, inspiring connections. Crafting meaningful brand narratives that bridge and cross cultures, identities, and strategic visions.</p>
+    <p>Drawing from our lifelong exposures to global cultural, social and economic phenomenons.</p>
   </div>
 
-  <div class="theme-selector">
-    <button onclick="filterTheme('all')" class="active">All</button>
-    <button onclick="filterTheme('emotion')">By Emotion</button>
-    <button onclick="filterTheme('experience')">By Experience</button>
-    <button onclick="filterTheme('design')">By Design</button>
-    <button onclick="filterTheme('change')">By Change / Renewal</button>
+  <div id="controls">
+    <h3>PORTFOLIO & CATEGORIES</h3>
+    <h3>APPROACH & IMPACT</h3>
+    <h3 id="impressionHeading">IMPRESSION</h3>
+    <div class="filter-container">
+      <div id="impressionSubFilters"></div>
+    </div>
   </div>
+
+
 
   <div class="collage" id="collage">
     <!-- Sample photos with theme tags -->
+    <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184727-O47THN4VEAP4S1WAEAML/image+%2819%29.png" class="photo" data-theme="emotion" />
+    <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184700-GB9GXRTH7I8BTTE89RZ4/image+%2814%29.png" class="photo" data-theme="design" />
+    <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184759-OZUUITPEW1Q1QRSPTZOW/image+%2820%29.png" class="photo" data-theme="experience" />
+    <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184821-SDHVU8UWS4KMTA9S2KXT/image+%2815%29.png" class="photo" data-theme="emotion" />
+    <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184835-QUKT0YA81YXYKBWTE8XT/image+%2819%29.png" class="photo" data-theme="change" />
+    <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184912-GJJNRIQTVHASF23EC398/5895eff08e645493e4347d3f57ffa73c.jpg" class="photo" data-theme="design" />
+    <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184748-UEATOYP8LD858QSO379L/412324614_1051595552727607_1048839557137103528_n.jpg" class="photo" data-theme="experience" />
+    <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184809-WO855J0TBRKVCEHCDBX8/image+%2814%29.png" class="photo" data-theme="emotion" />
     <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184727-O47THN4VEAP4S1WAEAML/image+%2819%29.png" class="photo" data-theme="emotion" />
     <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184700-GB9GXRTH7I8BTTE89RZ4/image+%2814%29.png" class="photo" data-theme="design" />
     <img src="https://images.squarespace-cdn.com/content/65c021080c90523fe0d6f11a/1707090184759-OZUUITPEW1Q1QRSPTZOW/image+%2820%29.png" class="photo" data-theme="experience" />
@@ -139,19 +328,116 @@
   </div>
 
   <script>
+    // --- UI & FILTERING LOGIC ---
+    const impressionHeadingEl = document.getElementById('impressionHeading');
+    const impressionSubFiltersEl = document.getElementById('impressionSubFilters');
+
+    function setupFilters() {
+      // Add click handler to the heading
+      impressionHeadingEl.onclick = () => handleImpressionHeadingClick();
+
+      // Sub-filters
+      const subThemes = ['By Emotion', 'By Experience', 'By Design', 'By Change / Renewal'];
+      subThemes.forEach(theme => {
+        const item = document.createElement('div');
+        item.textContent = theme;
+        item.dataset.value = theme;
+        item.onclick = (e) => handleSubImpressionClick(e.target, theme);
+        impressionSubFiltersEl.appendChild(item);
+      });
+    }
+
+    function handleImpressionHeadingClick() {
+      const isDeselecting = impressionHeadingEl.classList.contains('active');
+      
+      // Remove any existing connector lines
+      document.querySelectorAll('.category-connector').forEach(connector => {
+        connector.remove();
+      });
+      
+      if (isDeselecting) {
+        impressionHeadingEl.classList.remove('active');
+        hideImpressionSubFilters();
+      } else {
+        impressionHeadingEl.classList.add('active');
+        showImpressionSubFilters();
+        
+        // Create new connector line
+        const connector = document.createElement('div');
+        connector.className = 'category-connector';
+        
+        // Calculate the position and width dynamically
+        const headingRect = impressionHeadingEl.getBoundingClientRect();
+        const subFiltersRect = impressionSubFiltersEl.getBoundingClientRect();
+        const containerRect = document.querySelector('.filter-container').getBoundingClientRect();
+        
+        // Position line at the right edge of the heading
+        const startX = headingRect.right - containerRect.left;
+        connector.style.left = startX + 'px';
+        
+        // Position line at the center of the heading
+        const itemCenterY = headingRect.top + headingRect.height / 2 - containerRect.top;
+        connector.style.top = itemCenterY + 'px';
+        
+        // Add the new connector to the container first
+        document.querySelector('.filter-container').appendChild(connector);
+        
+        // Trigger animation by setting width after a brief delay
+        setTimeout(() => {
+          // Width extends to the left edge of sub-filters
+          const endX = subFiltersRect.left - containerRect.left;
+          const width = endX - startX;
+          connector.style.width = width + 'px';
+        }, 10);
+      }
+    }
+
+    function handleSubImpressionClick(element, theme) {
+      // Remove selected class from all sub-filter items
+      document.querySelectorAll('#impressionSubFilters div').forEach(el => {
+        el.classList.remove('selected');
+      });
+      
+      // Add selected class to the clicked sub-filter
+      element.classList.add('selected');
+      
+      // Filter the collage images
+      filterTheme(theme);
+    }
+    
+    // --- UI HELPER FUNCTIONS ---
+    function showImpressionSubFilters(clickedElement) {
+      impressionSubFiltersEl.style.display = 'block';
+    }
+
+    function hideImpressionSubFilters() {
+      impressionSubFiltersEl.style.display = 'none';
+    }
+    
+    // --- INITIALIZE ---
+    setupFilters();
+    
+
+
     function filterTheme(theme) {
       const images = document.querySelectorAll('.collage .photo');
-      const buttons = document.querySelectorAll('.theme-selector button');
-
-      // Update button styles
-      buttons.forEach(btn => btn.classList.remove('active'));
-      document.querySelector(`.theme-selector button[onclick="filterTheme('${theme}')"]`).classList.add('active');
+      
+      // Map theme names to data-theme values
+      const themeMap = {
+        'All': 'all',
+        'By Emotion': 'emotion',
+        'By Experience': 'experience',
+        'By Design': 'design',
+        'By Change / Renewal': 'change'
+      };
+      
+      const mappedTheme = themeMap[theme] || theme;
 
       images.forEach(img => {
-        if (theme === 'all') {
+        if (mappedTheme === 'all') {
           img.classList.remove('faded');
         } else {
-          if (img.dataset.theme === theme) {
+          if (img.dataset.theme === mappedTheme) {
             img.classList.remove('faded');
           } else {
             img.classList.add('faded');
