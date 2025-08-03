@@ -76,6 +76,12 @@
       color: #fff;
       background-color: #333;
     }
+    
+    .filter-item.impact-active {
+      color: #fff;
+      border-radius: 4px;
+      padding: 6px 12px;
+    }
 
     #entityList {
       font-family: 'Akkurat', sans-serif;
@@ -855,11 +861,21 @@
   }
 
   function handleImpactClick(element, impact) {
-    element.classList.toggle('active');
+    element.classList.toggle('impact-active');
     if (activeFilters.impacts.has(impact)) {
       activeFilters.impacts.delete(impact);
+      // Reset to original color
+      const ringIndex = impactRingMap[impact] || 0;
+      const color = ringColors[ringIndex % ringColors.length];
+      element.style.color = color;
+      element.style.backgroundColor = 'transparent';
     } else {
       activeFilters.impacts.add(impact);
+      // Set background to filter color and text to white
+      const ringIndex = impactRingMap[impact] || 0;
+      const color = ringColors[ringIndex % ringColors.length];
+      element.style.backgroundColor = color;
+      element.style.color = '#fff';
     }
     updateGraphVisibility();
   }
