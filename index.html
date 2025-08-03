@@ -232,7 +232,9 @@
       <div id="entityList"></div>
     </div>
     <h3>APPROACH & IMPACT</h3>
-    <div id="impactFilters"></div>
+    <div class="filter-container">
+      <div id="impactFilters"></div>
+    </div>
   </div>
   <div id="graph"></div>
   <div id="infoPopup">
@@ -768,6 +770,12 @@
       item.textContent = impact;
       item.dataset.value = impact;
       item.onclick = (e) => handleImpactClick(e.target, impact);
+      
+      // Apply the corresponding node color to the filter item
+      const ringIndex = impactRingMap[impact] || 0;
+      const color = ringColors[ringIndex % ringColors.length];
+      item.style.color = color;
+      
       impactFiltersEl.appendChild(item);
     });
   }
