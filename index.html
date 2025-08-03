@@ -45,7 +45,7 @@
       width: 0;
       height: 1px;
       background-color: #000;
-      transition: all 0.3s ease;
+      transition: width 0.3s ease;
       z-index: 1;
     }
     
@@ -244,7 +244,6 @@
     <h3>PORTFOLIO & CATEGORIES</h3>
     <div class="filter-container">
       <div id="categoryFilters"></div>
-      <div class="category-connector"></div>
       <div id="entityList"></div>
     </div>
     <h3>APPROACH & IMPACT</h3>
@@ -798,7 +797,11 @@
 
   function handleCategoryClick(element, category) {
     const isDeselecting = activeFilters.category === category;
-    const connector = document.querySelector('.category-connector');
+    
+    // Remove any existing connector lines
+    document.querySelectorAll('.category-connector').forEach(connector => {
+      connector.remove();
+    });
     
     // Deactivate all other category buttons
     document.querySelectorAll('#categoryFilters .filter-item').forEach(el => el.classList.remove('active'));
@@ -806,40 +809,44 @@
     if (isDeselecting) {
       activeFilters.category = null;
       hideEntityList();
-      // Hide connector line
-      if (connector) {
-        connector.style.width = '0';
-      }
     } else {
       activeFilters.category = category;
       element.classList.add('active');
       showEntityList(category, element);
-      // Show connector line
-      if (connector) {
-        // Calculate the position and width dynamically
-        const categoryFilters = document.getElementById('categoryFilters');
-        const entityList = document.getElementById('entityList');
+      
+      // Create new connector line
+      const connector = document.createElement('div');
+      connector.className = 'category-connector';
+      
+      // Calculate the position and width dynamically
+      const categoryFilters = document.getElementById('categoryFilters');
+      const entityList = document.getElementById('entityList');
+      
+      if (categoryFilters && entityList) {
+        const categoryRect = categoryFilters.getBoundingClientRect();
+        const entityRect = entityList.getBoundingClientRect();
+        const containerRect = document.querySelector('.filter-container').getBoundingClientRect();
         
-        if (categoryFilters && entityList) {
-          const categoryRect = categoryFilters.getBoundingClientRect();
-          const entityRect = entityList.getBoundingClientRect();
-          const containerRect = document.querySelector('.filter-container').getBoundingClientRect();
-          
-          // Position line at the right edge of category filters
-          const startX = categoryRect.right - containerRect.left;
-          connector.style.left = startX + 'px';
-          
-          // Position line at the center of the selected category item
-          const selectedItem = element;
-          const itemRect = selectedItem.getBoundingClientRect();
-          const itemCenterY = itemRect.top + itemRect.height / 2 - containerRect.top;
-          connector.style.top = itemCenterY + 'px';
-          
+        // Position line at the right edge of category filters
+        const startX = categoryRect.right - containerRect.left;
+        connector.style.left = startX + 'px';
+        
+        // Position line at the center of the selected category item
+        const selectedItem = element;
+        const itemRect = selectedItem.getBoundingClientRect();
+        const itemCenterY = itemRect.top + itemRect.height / 2 - containerRect.top;
+        connector.style.top = itemCenterY + 'px';
+        
+        // Add the new connector to the container first
+        document.querySelector('.filter-container').appendChild(connector);
+        
+        // Trigger animation by setting width after a brief delay
+        setTimeout(() => {
           // Width extends to the left edge of entity list
           const endX = entityRect.left - containerRect.left;
           const width = endX - startX;
           connector.style.width = width + 'px';
-        }
+        }, 10);
       }
     }
     updateGraphVisibility();
