@@ -676,7 +676,8 @@
   // --- OPTIMIZATION: Centralized state for filters ---
   const activeFilters = {
     category: null,
-    impacts: new Set()
+    impacts: new Set(),
+    selectedEntity: null
   };
 
   // --- PREPARE GRAPH DATA (Done only once) ---
@@ -816,6 +817,7 @@
     
     if (isDeselecting) {
       activeFilters.category = null;
+      activeFilters.selectedEntity = null;
       hideEntityList();
     } else {
       activeFilters.category = category;
@@ -923,6 +925,9 @@
       entityElement.classList.add('selected');
     }
     
+    // Set the selected entity in active filters
+    activeFilters.selectedEntity = entity.name;
+    
     gData.nodes.forEach(n => {
         n.visible = n.id === centerNode.id || n.radialIndex === entity.radialIndex;
     });
@@ -1028,6 +1033,124 @@
         ctx.beginPath();
         ctx.arc(node.x, node.y, baseRadius + i * ringSpacing, 0, 2 * Math.PI);
         ctx.stroke();
+      }
+      
+      // Draw ring labels only when categories are selected
+      const ringLabels = [
+        'STRATEGY. CULTURE',
+        'CREATIVE SOLUTION', 
+        'BRANDING',
+        'RETAIL. CURATION',
+        'EAST. WEST',
+        'EDU. LEARNING'
+      ];
+      
+      // Only show labels when a category is selected
+      if (activeFilters.category) {
+        ctx.font = '10px Akkurat, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#999';
+        
+        // Check if a specific entity is selected
+        const selectedEntity = entities.find(e => e.name === activeFilters.selectedEntity);
+        
+        if (selectedEntity) {
+          // Show only labels for the selected entity's impacts
+          selectedEntity.impacts.forEach((impactObj, index) => {
+            const impact = impactObj.name;
+            const ringIndex = impactRingMap[impact];
+            if (ringIndex !== undefined) {
+              const radius = baseRadius + ringIndex * ringSpacing;
+              const label = ringLabels[ringIndex];
+              
+              // Calculate the angle based on the entity's radial position
+              const entityAngle = (2 * Math.PI * selectedEntity.radialIndex) / reorganizedEntities.length;
+              
+              // Position label with intelligent offset to avoid overlaps
+              const baseX = node.x + (radius + 20) * Math.cos(entityAngle);
+              const baseY = node.y + (radius + 20) * Math.sin(entityAngle);
+              
+              // Calculate offset based on angle to avoid overlaps
+              let offsetX = 25;
+              let offsetY = -10;
+              
+              // Check if the angle is close to horizontal (near 0° or 180°)
+              const isNearHorizontal = Math.abs(Math.sin(entityAngle)) < 0.3; // Within ~17 degrees of horizontal
+              
+              if (isNearHorizontal) {
+                // For near-horizontal lines, use consistent offset relative to each node
+                offsetX = 12; // Consistent horizontal distance from the node
+                
+                // Special case for URF to prevent label overlap
+                if (selectedEntity.name === 'URF / TX THE BOX') {
+                  const labelIndex = selectedEntity.impacts.findIndex(imp => imp.name === impact);
+                  offsetX = -2; // Closer to the node horizontally for URF
+                  offsetY = -15 + (labelIndex * 12); // Small height offset for URF labels
+                } else if (selectedEntity.name === 'DANDELION') {
+                  // Special case for Dandelion to position labels lower
+                  const labelIndex = selectedEntity.impacts.findIndex(imp => imp.name === impact);
+                  offsetX = 30;
+                  offsetY = 0 + (labelIndex *2); // Lower height offset for Dandelion labels
+                } else if (selectedEntity.name === 'SOTHEBY\'S Auction, International Realty') {
+                  // Special case for Sotheby's to offset labels to the right
+                  offsetX = 25;
+                  offsetY = -15;
+                } else if (selectedEntity.name === 'SMILE ANGEL FOUNDATION') {
+                  // Special case for Smile Angel Foundation to offset labels to the left
+                  offsetX = -10; // Offset to the left for Smile Angel Foundation
+                  offsetY = 10; // Standard vertical offset
+                } else {
+                  offsetY = -15; // Consistent vertical offset from the node
+                }
+              } else {
+                // Adjust offset based on the radial angle to avoid overlaps
+                if (entityAngle > -Math.PI/4 && entityAngle < Math.PI/4) {
+                  // Top-right quadrant: move more right and up
+                  offsetX = 30;
+                  offsetY = -15;
+                } else if (entityAngle >= Math.PI/4 && entityAngle < 3*Math.PI/4) {
+                  // Top-left quadrant: move more left and up
+                  offsetX = 25;
+                  offsetY = -20;
+                } else if (entityAngle >= 3*Math.PI/4 || entityAngle < -3*Math.PI/4) {
+                  // Bottom-left quadrant: move more left and down
+                  offsetX = 20;
+                  offsetY = 5;
+                } else {
+                  // Bottom-right quadrant: move more right and down
+                  offsetX = 25;
+                  offsetY = 10;
+                }
+              }
+              
+              const x = baseX + offsetX;
+              const y = baseY + offsetY;
+              
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.fillText(label, 0, 0);
+              ctx.restore();
+            }
+          });
+        } else {
+          // Show all labels when category is selected but no specific entity
+          for (let i = 0; i < maxLayers; i++) {
+            const radius = baseRadius + i * ringSpacing;
+            const label = ringLabels[i];
+            if (label) {
+              // Position label at 135-degree angle (bottom-left) but keep text horizontal
+              const angle = Math.PI / 4; // 135 degrees
+              const x = node.x + (radius + 20) * Math.cos(angle);
+              const y = node.y + (radius + 20) * Math.sin(angle);
+              
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.fillText(label, 0, 0);
+              ctx.restore();
+            }
+          }
+        }
       }
     } else {
       // Draw normal node
