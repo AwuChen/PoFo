@@ -820,6 +820,8 @@
       activeFilters.selectedEntity = null;
       hideEntityList();
     } else {
+      // Reset selected entity when switching to a new category
+      activeFilters.selectedEntity = null;
       activeFilters.category = category;
       element.classList.add('active');
       showEntityList(category, element);
